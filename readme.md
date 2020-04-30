@@ -1,4 +1,4 @@
-# slimPN - Web Push Notifications for your Homepage
+# PNServer - Web Push Notifications for your Homepage
 
 ![Latest Stable Version](https://img.shields.io/badge/release-v1.0.0-brightgreen.svg) ![License](https://img.shields.io/packagist/l/gomoob/php-pushwoosh.svg) [![Minimum PHP Version](https://img.shields.io/badge/php-%3E%3D%207.1-8892BF.svg)](https://php.net/)
 ----------
