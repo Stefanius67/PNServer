@@ -169,7 +169,7 @@ function pnNotificationClick(event) {
  * event listener to notification close
  * ... if you want to do something for e.g. analytics
  */
-function pnNotificationClick(event) {
+function pnNotificationClose(event) {
     console.log('notificationclose event: ' + event);
 }
 
