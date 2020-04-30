@@ -2,18 +2,6 @@
  * functions to support PUSH notifications (PN) on user client
  */
 
-// encode the base64 public key to Array buffer
-function encodeB64ToUint8Array(strBase64) {
-	var strPadding = '='.repeat((4 - (strBase64.length % 4)) % 4);
-	var strBase64 = (strBase64 + strPadding).replace(/\-/g, '+').replace(/_/g, '/');
-	var rawData = atob(strBase64);
-	var aOutput = new Uint8Array(rawData.length);
-	for (i = 0; i < rawData.length; ++i) {
-		aOutput[i] = rawData.charCodeAt(i);
-	}
-	return aOutput;
-}
-
 /**
  * subscribe Push notifications (PN)
  * - check, if PN's are available
@@ -21,20 +9,22 @@ function encodeB64ToUint8Array(strBase64) {
  * - register service worker, if permisson is granted  
  */
 async function pnSubscribe() {
-    var swReg = null;
     if (pnAvailable()) {
         // if not granted or denied so far...
         if (window.Notification.permission === "default") {
             await window.Notification.requestPermission();
         }
         if (Notification.permission === 'granted') {
-            // register service worker (browser checks if allready registered)
-            swReg = await pnRegisterSW();
+            // register service worker
+            await pnRegisterSW();
         }
     }
-    return swReg;
 }
 
+/**
+ * helper while testing
+ * unsubscribe Push notifications
+ */
 async function pnUnsubscribe() {
     var swReg = null;
     if (pnAvailable()) {
@@ -44,6 +34,25 @@ async function pnUnsubscribe() {
     }
 }
 
+/**
+ * helper while testing
+ * update service worker.
+ * works not correct on each browser/os -> sometimes brwoser have to
+ * be restarted to update service worker
+ */
+async function pnUpdate() {
+    var swReg = null;
+    if (pnAvailable()) {
+        // unfortunately there is no function to reset Notification permission...
+        // unregister service worker
+        await pnUpdateSW();
+    }
+}
+
+/**
+ * helper while testing
+ * check if PN already subscribed
+ */
 async function pnSubscribed() {
     var swReg = undefined;
     if (pnAvailable()) {
@@ -64,17 +73,24 @@ async function pnSubscribed() {
  * @returns boolen
  */
 function pnAvailable() {
-    var bAvailable = window.isSecureContext;
-    if (bAvailable) {
-        bAvailable = (('serviceWorker' in navigator) && ('PushManager' in window) && ('Notification' in window)); 
+    var bAvailable = false;
+    if (window.isSecureContext) {
+		// running in secure context - check for available Push-API
+        bAvailable = (('serviceWorker' in navigator) && 
+		              ('PushManager' in window) && 
+					  ('Notification' in window)); 
     } else {
         console.log('site have to run in secure context!');
     }
     return bAvailable;
 }
 
+/**
+ * register the service worker.
+ * there is no check for multiple registration necessary - browser/Push-API
+ * takes care if same service-worker ist already registered
+ */
 async function pnRegisterSW() {
-    var swReg;
     navigator.serviceWorker.register('PNServiceWorker.js')
         .then((swReg) => {
             // registration worked
@@ -83,27 +99,12 @@ async function pnRegisterSW() {
             // registration failed
             console.log('Registration failed with ' + error);
         });
-    return swReg;
 }
 
-async function pnRegisterSWTest() {
-	  return navigator.serviceWorker.register('SW.js')
-	  	.then(function(registration) {
-	  		const subscribeOptions = {
-	  				userVisibleOnly: true //,
-	  				//applicationServerKey: encodeB64ToUint8Array(
-	  				//		'BDtOCcUUTYvuUzx9ktgYs3mB6tQCjFLNfOkuiaIi_2LNosLbHQY6P91eMzQ8opTDLK_PjJHsjMSiJ-MUOeSjV8E'
-	  				//	)
-	  			};
-	  		return registration.pushManager.subscribe(subscribeOptions);
-	  	})
-	  	.then(function(pushSubscription) {
-	  		console.log('Received PushSubscription: ', JSON.stringify(pushSubscription));
-	  		return pushSubscription;
-	  	});
-}
-
-
+/**
+ * helper while testing
+ * unregister the service worker.
+ */
 async function pnUnregisterSW() {
     navigator.serviceWorker.getRegistration()
         .then(function(reg) {
@@ -113,6 +114,24 @@ async function pnUnregisterSW() {
                         console.log('unregister service worker succeeded.');
                     } else {
                         console.log('unregister service worker failed.');
+                    }
+                });
+        });
+}
+
+/**
+ * helper while testing
+ * update service worker.
+ */
+async function pnUpdateSW() {
+    navigator.serviceWorker.getRegistration()
+        .then(function(reg) {
+            reg.update()
+                .then(function(bOK) {
+                    if (bOK) {
+                        console.log('update of service worker succeeded.');
+                    } else {
+                        console.log('update of service worker failed.');
                     }
                 });
         });
