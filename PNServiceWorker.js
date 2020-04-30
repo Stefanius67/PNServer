@@ -2,13 +2,13 @@
  * values to be modified for own project
  */
 // VAPID appPublic key
-const strAppPublicKey     = 'BDtOCcUUTYvuUzx9ktgYs3mB6tQCjFLNfOkuiaIi_2LNosLbHQY6P91eMzQ8opTDLK_PjJHsjMSiJ-MUOeSjV8E';
+const strAppPublicKey  = 'create your own VAPID key pair and insert public key here';
 // URL to save subscription on server via Fetch API
-const strSubscriberURL    = 'https://www.hsg-ortenau-sued.de/test/PNSubscriber.php';
+const strSubscriberURL = 'https://www.your-domain.org/PNSubscriber.php';
 // default Notification Title if not pushed by server
-const strDefTitle        = 'New Notification';
+const strDefTitle      = 'Your company or product';
 // default Notification Icon if not pushed by server
-const strDefIcon        = './elephpant.png';
+const strDefIcon       = './elephpant.png';
  
 /**
  * encode the public key to Array buffer

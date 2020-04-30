@@ -20,20 +20,32 @@ You can download the  Latest [release version ](https://www.phpclasses.org/packa
 
 required adaptions for your own project (in *PNServiceworker.js*):
 ```javascript
-    // VAPID appPublic key
-    const strAppPublicKey   = 'create your own VAPID key pair and insert public key here';
-    // URL to save subscription on server via Fetch API
-    const strSubscriberURL  = 'https://www.your-domain.org/PNSubscriber.php';
-    // default Notification Title if not pushed by server
-    const strDefTitle       = 'Your company or product';
-    // default Notification Icon if not pushed by server
-    const strDefIcon        = './elephpant.png';
+  // VAPID appPublic key
+  const strAppPublicKey   = 'create your own VAPID key pair and insert public key here';
+  // URL to save subscription on server via Fetch API
+  const strSubscriberURL  = 'https://www.your-domain.org/PNSubscriber.php';
+  // default Notification Title if not pushed by server
+  const strDefTitle       = 'Your company or product';
+  // default Notification Icon if not pushed by server
+  const strDefIcon        = './elephpant.png';
 ```
 
+you can generate your own VAPID key on [https://tools.reactpwa.com/vapid](https://tools.reactpwa.com/vapid).
+
 ## Usage
-*PnClient.html* shows a simple Page to subscribe the push notifications.
-
-*PNServerTest.php* demonstrates, how the Notification Server can be implemented.
-
 A [tutorial](https://www.phpclasses.org/blog_post.html?view_post=2046&key=56f8ae) describing the individual steps for using the package is available at [PHPclasses.org](https://www.phpclasses.org/blog_post.html?view_post=2046&key=56f8ae). 
-The script PNTest.php shows the usage of the classes.
+
+*PnTestClient.html* shows a simple Page to subscribe the push notifications.
+
+*PNTestServer.php* demonstrates, how the Notification Server can be implemented:
+insert your own VAPID key at following lines:
+```php
+  // set the VAPID key
+  $oVapid = new PNVapid(
+          "mailto:yourmail@yourdomain.de",
+          "insert your own VAPID public-key here",
+          "insert your own VAPID private-key here"
+      );
+  $oServer->setVapid($oVapid);
+```
+
