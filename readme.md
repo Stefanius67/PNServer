@@ -16,7 +16,7 @@ PHP >= 7.1 is required to be able to generate the necessary encryption keys  - T
 - BC Math (bcmath)
 
 ## Installation   
-You can download the  Latest [release version ](https://www.phpclasses.org/package/xxxxx-xxxxxxxxxxxxxxxxxxx.html) from PHPClasses.org
+You can download the  Latest [release version ](https://www.phpclasses.org/package/11632-PHP-Queue-and-push-notifications-to-Web-users.html) from PHPClasses.org
 
 required adaptions for your own project (in *PNServiceworker.js*):
 ```javascript
@@ -33,7 +33,7 @@ required adaptions for your own project (in *PNServiceworker.js*):
 you can generate your own VAPID key on [https://tools.reactpwa.com/vapid](https://tools.reactpwa.com/vapid).
 
 ## Usage
-A [tutorial](https://www.phpclasses.org/blog_post.html?view_post=2046&key=56f8ae) describing the individual steps for using the package is available at [PHPclasses.org](https://www.phpclasses.org/blog_post.html?view_post=2046&key=56f8ae). 
+A [tutorial](https://www.phpclasses.org/blog/package/11632/post/1-How-to-Use-PHP-to-Send-Web-Push-Notifications-for-Your-Web-Site-in-2020.html) describing the individual steps for using the package is available at [PHPclasses.org](https://www.phpclasses.org/blog/package/11632/post/1-How-to-Use-PHP-to-Send-Web-Push-Notifications-for-Your-Web-Site-in-2020.html). 
 
 *PnTestClient.html* shows a simple Page to subscribe the push notifications.
 
