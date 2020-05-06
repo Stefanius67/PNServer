@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace lib\PNServer\Utils;
+namespace SKien\PNServer\Utils;
 
 /*
  * extracted required classes and functions from package
@@ -37,8 +37,8 @@ namespace lib\PNServer\Utils;
  * ***********************************************************************
  */
 
-use lib\PNServer\Utils\Math;
-use lib\PNServer\Utils\Point;
+use SKien\PNServer\Utils\Math;
+use SKien\PNServer\Utils\Point;
 
 /**
  * @internal
