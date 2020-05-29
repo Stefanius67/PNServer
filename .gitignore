@@ -1,5 +1,5 @@
 /.settings/
 /.buildpath
 /.project
-/pnsub.sqlite
+/*.sqlite
 /myVAPID.txt

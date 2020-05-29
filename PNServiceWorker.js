@@ -1,6 +1,9 @@
 /**
- * values to be modified for own project
+ * Serviceworker for web push notifications
+ * @package PNServer
  */
+ 
+// values to be modified for own project
 // VAPID appPublic key
 const strAppPublicKey  = 'create your own VAPID key pair and insert public key here';
 // URL to save subscription on server via Fetch API
@@ -12,8 +15,8 @@ const strDefIcon       = './elephpant.png';
  
 /**
  * encode the public key to Array buffer
- * @param string strBase64     key to encode
- * @return UInt8Array
+ * @param {string} strBase64  -   key to encode
+ * @return {Array} - UInt8Array
  */
 function encodeToUint8Array(strBase64) {
     var strPadding = '='.repeat((4 - (strBase64.length % 4)) % 4);
@@ -28,7 +31,7 @@ function encodeToUint8Array(strBase64) {
 
 /**
  * event listener to subscribe notifications and save subscription at server
- * @param ExtendableEvent event 
+ * @param {ExtendableEvent} event 
  */
 async function pnSubscribe(event) {
     console.log('Serviceworker: activate event');
@@ -62,7 +65,7 @@ async function pnSubscribe(event) {
 /**
  * event listener handling when subscription change
  * just re-subscribe 
- * @param PushSubscriptionChangeEvent event 
+ * @param {PushSubscriptionChangeEvent} event 
  */
 async function pnSubscriptionChange(event) {
     console.log('Serviceworker: subscription change event: ' + event);
@@ -92,7 +95,8 @@ async function pnSubscriptionChange(event) {
  * save subscription on server
  * using Fetch API to send subscription infos to the server
  * subscription is encance with the userAgent for internal use on the server
- * @param PushSubscription sub
+ * @param {object} sub - PushSubscription
+ * @return {string} - response of the request
  */
 async function pnSaveSubscription(sub) {
     // stringify and parse again to add 'custom' property
@@ -111,7 +115,7 @@ async function pnSaveSubscription(sub) {
 
 /**
  * event listener to show notification
- * @param PushEvent event
+ * @param {PushEvent} event
  */
 function pnPushNotification(event) {
     console.log('push event: ' + event);
@@ -151,6 +155,7 @@ function pnPushNotification(event) {
 /**
  * event listener to notification click
  * if URL passed, just open the window...
+ * @param {NotificationClick} event
  */
 function pnNotificationClick(event) {
     console.log('notificationclick event: ' + event);
@@ -168,6 +173,7 @@ function pnNotificationClick(event) {
 /**
  * event listener to notification close
  * ... if you want to do something for e.g. analytics
+ * @param {NotificationClose} event
  */
 function pnNotificationClose(event) {
     console.log('notificationclose event: ' + event);

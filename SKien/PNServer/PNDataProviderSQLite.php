@@ -3,8 +3,6 @@ namespace SKien\PNServer;
 
 use SKien\PNServer\PNDataProvider;
 
-require_once dirname(__FILE__) . '/PNDataProvider.php';
-
 /**
  * dataprovider for SqLite database
  * uses given Table in specified SqLite database

@@ -1,4 +1,6 @@
 <?php
+require_once 'autoloader.php';
+
 use SKien\PNServer\PNDataProvider;
 use SKien\PNServer\PNDataProviderSQLite;
 use SKien\PNServer\PNDataProviderMySQL;
@@ -6,10 +8,6 @@ use SKien\PNServer\PNSubscription;
 use SKien\PNServer\PNVapid;
 use SKien\PNServer\PNPayload;
 use SKien\PNServer\PNServer;
-
-require_once 'SKien/PNServer/PNDataProviderSQLite.php';
-require_once 'SKien/PNServer/PNDataProviderMySQL.php';
-require_once 'SKien/PNServer/PNServer.php';
 
 	// check, if PHP version is sufficient and all required extensions are installed
 	$bExit = false;

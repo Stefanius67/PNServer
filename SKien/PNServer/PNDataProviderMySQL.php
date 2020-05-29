@@ -3,8 +3,6 @@ namespace SKien\PNServer;
 
 use SKien\PNServer\PNDataProvider;
 
-require_once dirname(__FILE__) . '/PNDataProvider.php';
-
 /**
  * dataprovider for MySQL database
  * uses given Table in specified MySQL database

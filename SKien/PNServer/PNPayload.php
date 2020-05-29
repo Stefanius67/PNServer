@@ -1,8 +1,6 @@
 <?php
 namespace SKien\PNServer;
 
-require_once dirname(__FILE__) . '/PNServerHelper.php';
-
 /**
  * class representing payload for push notification.
  * 

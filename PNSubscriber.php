@@ -1,5 +1,5 @@
 <?php
-require_once 'SKien/PNServer/PNDataProviderSQLite.php';
+require_once 'autoloader.php';
 
 use SKien\PNServer\PNDataProviderSQLite;
 

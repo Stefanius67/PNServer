@@ -1,16 +1,10 @@
 <?php
 namespace SKien\PNServer;
 
-require_once dirname(__FILE__) . '/PNDataProvider.php';
-require_once dirname(__FILE__) . '/PNSubscription.php';
-require_once dirname(__FILE__) . '/PNVapid.php';
-require_once dirname(__FILE__) . '/PNEncryption.php';
-require_once dirname(__FILE__) . '/PNPayload.php';
-
 use SKien\PNServer\PNDataProvider;
 use SKien\PNServer\PNVapid;
 use SKien\PNServer\PNSubscription;
-use SKien\PNServer\PNEncrption;
+use SKien\PNServer\PNEncryption;
 
 /**
  * main class of the package to create push notifications.
@@ -161,7 +155,7 @@ class PNServer
                 foreach ($this->aSubscription as $oSub) {
                     // payload must be encrypted every time although it does not change, since 
                     // each subscription has at least his public key and authentication token of its own ...
-                    $oEncrypt = new PNEncrption($oSub->getPublicKey(), $oSub->getAuth(), $oSub->getEncoding()); 
+                    $oEncrypt = new PNEncryption($oSub->getPublicKey(), $oSub->getAuth(), $oSub->getEncoding()); 
                     if (($strContent = $oEncrypt->encrypt($this->strPayload)) !== false) {
                         // merge headers from encryption and VAPID (maybe both containing 'Crypto-Key')
                         if (($aVapidHeaders = $this->oVapid->getHeaders($oSub->getEndpoint())) !== false) {

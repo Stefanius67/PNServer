@@ -1,12 +1,6 @@
 <?php
 namespace SKien\PNServer;
 
-require_once dirname(__FILE__) . '/PNServerHelper.php';
-require_once dirname(__FILE__) . '/Utils/Math.php';
-require_once dirname(__FILE__) . '/Utils/Point.php';
-require_once dirname(__FILE__) . '/Utils/Curve.php';
-require_once dirname(__FILE__) . '/Utils/NistCurve.php';
-
 use SKien\PNServer\Utils\NistCurve;
 
 /**
@@ -31,7 +25,7 @@ use SKien\PNServer\Utils\NistCurve;
  * @author Stefanius <s.kien@online.de>
  * @copyright MIT License - see the LICENSE file for details
  */
-class PNEncrption
+class PNEncryption
 {
     use PNServerHelper;
 
