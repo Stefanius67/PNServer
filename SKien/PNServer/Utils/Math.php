@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace lib\PNServer\Utils;
+namespace SKien\PNServer\Utils;
 
 /*
  * extracted required classes and functions from package

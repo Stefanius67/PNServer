@@ -1,15 +1,13 @@
 <?php
-use lib\PNServer\PNDataProvider;
-use lib\PNServer\PNDataProviderSQLite;
-use lib\PNServer\PNDataProviderMySQL;
-use lib\PNServer\PNSubscription;
-use lib\PNServer\PNVapid;
-use lib\PNServer\PNPayload;
-use lib\PNServer\PNServer;
+require_once 'autoloader.php';
 
-require_once 'lib/PNServer/PNDataProviderSQLite.php';
-require_once 'lib/PNServer/PNDataProviderMySQL.php';
-require_once 'lib/PNServer/PNServer.php';
+use SKien\PNServer\PNDataProvider;
+use SKien\PNServer\PNDataProviderSQLite;
+use SKien\PNServer\PNDataProviderMySQL;
+use SKien\PNServer\PNSubscription;
+use SKien\PNServer\PNVapid;
+use SKien\PNServer\PNPayload;
+use SKien\PNServer\PNServer;
 
 	// check, if PHP version is sufficient and all required extensions are installed
 	$bExit = false;
@@ -35,12 +33,13 @@ require_once 'lib/PNServer/PNServer.php';
 	// $oDP = new PNDataProviderMySQL('localhost', 'username', 'password', 'db-name');
 	
 	if (!$oDP->isConnected()) {
+	    echo $oDP->getError();
 		exit();
 	}
 
 	// just add expired (unsubscribed) subscription to demonstrate response of
 	// push service and the auto-remove option
-	$oDP->saveSubscription(
+	if (!$oDP->saveSubscription(
 			'{'
 			.'	"endpoint": "https://fcm.googleapis.com/fcm/send/f8PIq7EL6xI:APA91bFgD2qA0Goo_6sWgWVDKclh5Sm1Gf1BtYZw3rePs_GHqmC9l2N92I4QhLQtPmyB18HYYseFHLhvMbpq-oGz2Jtt8AVExmNU9R3K9Z-Gaiq6rQxig1WT4ND_5PSXTjuth-GoGggt",'
 			.'	"expirationTime": "1589291569000",'
@@ -49,7 +48,10 @@ require_once 'lib/PNServer/PNServer.php';
 			.'	"auth": "jOfywakW_srfHhMF-NiZ3Q"'
 			.'	}'
 			.'}'
-	);
+	    )) {
+	    echo $oDP->getError();
+	    exit();
+	}
 	
 	echo 'Count of subscriptions: ' . $oDP->count() . '<br/><br/>' . PHP_EOL;
 	if ($oDP->init()) {
@@ -61,17 +63,28 @@ require_once 'lib/PNServer/PNServer.php';
 			$strPrintable = str_replace(" ", '&nbsp;', $strPrintable);
 			echo '<span style="font-size: 10pt; font-family: courier; overflow:scroll; white-space: nowrap">' . $strPrintable . '</span><br/><br/>' . PHP_EOL;			
 		}
+	} else {
+    	echo $oDP->getError();
+    	exit();
 	}
 	
 	// the server to handle all
 	$oServer = new PNServer($oDP);
 
 	// set the VAPID key
+	/*
 	$oVapid = new PNVapid(
 			"mailto:yourmail@yourdomain.de",
 			"the-generated-public-key",
 			"the-generated-private-key"
-	);
+	   );
+	*/
+	$oVapid = new PNVapid(
+	       "mailto:s.kien@online.de",
+	       "BDtOCcUUTYvuUzx9ktgYs3mB6tQCjFLNfOkuiaIi_2LNosLbHQY6P91eMzQ8opTDLK_PjJHsjMSiJ-MUOeSjV8E",
+	       "juLDCbPNbObvn-89_o0SEbnBZLMWxlVEjGypyxHEh2M"
+	   );
+	        
 	$oServer->setVapid($oVapid);
 	
 	// create payload
@@ -89,7 +102,10 @@ require_once 'lib/PNServer/PNServer.php';
 	$oServer->setPayload($oPayload);
 
 	// load subscriptions from database (incluing the expired one created above...) 
-	$oServer->loadSubscriptions();
+	if (!$oServer->loadSubscriptions()) {
+	    echo $oDP->getError();
+	    exit();
+	}
 	
 	// ... and finally push !
 	if (!$oServer->push()) {
@@ -99,6 +115,6 @@ require_once 'lib/PNServer/PNServer.php';
 		echo '<h2>Push - Log:</h2>' . PHP_EOL;
 		foreach ($aLog as $strEndpoint => $aMsg ) {
 			echo '<h3>' . PNSubscription::getOrigin($strEndpoint) . '</h3>' . PHP_EOL;
-			echo $aMsg['msg'] . '<br/>resonse code: ' . $aMsg['curl_response_code']  . ' (' . $aLog['curl_response'] . ')';	
+			echo $aMsg['msg'] . '<br/>resonse code: ' . $aMsg['curl_response_code']  . ' (' . $aMsg['curl_response'] . ')';	
 		}
 	}

@@ -1,7 +1,7 @@
 <?php
-require_once 'lib/PNServer/PNDataProviderSQLite.php';
+require_once 'autoloader.php';
 
-use lib\PNServer\PNDataProviderSQLite;
+use SKien\PNServer\PNDataProviderSQLite;
 
 $result = array();
 // only serve POST request containing valid json data
