@@ -1,4 +1,6 @@
 <?php
+declare(strict_types = 1);
+
 namespace SKien\PNServer;
 
 use SKien\PNServer\Utils\NistCurve;
@@ -16,12 +18,12 @@ use SKien\PNServer\Utils\NistCurve;
  *  @link https://web-push-book.gauntface.com/downloads/web-push-book.pdf
  *  @link https://developers.google.com/web/updates/2016/03/web-push-encryption
  *
- * history:
- * date         version
- * 2020-04-12   initial version
+ * #### History
+ * - *2020-04-12*   initial version
+ * - *2020-08-03*   PHP 7.4 type hint
  *
- * @package PNServer
- * @version 1.0.0
+ * @package SKien/PNServer
+ * @version 1.1.0
  * @author Stefanius <s.kien@online.de>
  * @copyright MIT License - see the LICENSE file for details
  */
@@ -35,28 +37,29 @@ class PNEncryption
     const MAX_COMPATIBILITY_PAYLOAD_LENGTH = 3052;
     
     /** @var string public key from subscription        */
-    protected $strSubscrKey;
+    protected string $strSubscrKey = '';
     /** @var string subscription authenthication code   */
-    protected $strSubscrAuth;
+    protected string $strSubscrAuth = '';
     /** @var string encoding 'aesgcm' / 'aes128gcm'     */
-    protected $strEncoding;
+    protected string $strEncoding = '';
     /** @var string payload to encrypt                  */ 
-    protected $strPayload = null;
+    protected string $strPayload = '';
     /** @var string local generated public key          */
-    protected $strLocalPublicKey;
+    protected string $strLocalPublicKey = '';
     /** @var \GMP   local generated private key         */
-    protected $gmpLocalPrivateKey;
+    protected \GMP $gmpLocalPrivateKey;
     /** @var string generated salt                      */
-    protected $strSalt;
+    protected string $strSalt = '';
     /** @var string last error msg                          */
-    protected $strError;
+    protected string $strError = '';
     
     /**
      * @param string $strSubscrKey      public key from subscription
      * @param string $strSubscrAuth     subscription authenthication code
      * @param string $strEncoding       encoding (default: 'aesgcm')
      */
-    public function __construct($strSubscrKey, $strSubscrAuth, $strEncoding='aesgcm') {
+    public function __construct(string $strSubscrKey, string $strSubscrAuth, string $strEncoding='aesgcm') 
+    {
         $this->strSubscrKey = self::decodeBase64URL($strSubscrKey);
         $this->strSubscrAuth = self::decodeBase64URL($strSubscrAuth);
         $this->strEncoding = $strEncoding;
@@ -65,22 +68,28 @@ class PNEncryption
     
     /**
      * encrypt the payload.
-     * @param unknown $strPayload
-     * @return encrypted string at success, false on any error
+     * @param string $strPayload
+     * @return string|bool encrypted string at success, false on any error
      */
-    public function encrypt($strPayload) {
+    public function encrypt(string $strPayload) 
+    {
         $this->strError = '';
         $this->strPayload = $strPayload;
         $strContent = false;
         
         // there's nothing to encrypt without payload...
-        if (!isset($strPayload)) {
+        if (strlen($strPayload) == 0) {
             // it's OK - just set content-length of request to 0!
             return '';
         }
         
         if ($this->strEncoding !== 'aesgcm' && $this->strEncoding !== 'aes128gcm') {
             $this->strError = "Encoding '" . $this->strEncoding . "' is not supported!";
+            return false;
+        }
+        
+        if (mb_strlen($this->strSubscrKey, '8bit') !== 65) {
+            $this->strError = "Invalid client public key length!";
             return false;
         }
         
@@ -134,18 +143,19 @@ class PNEncryption
     }
     
     /**
-     * get headers for previous encrypted payload.
-     * already existing headers (e.g. the VAPID-signature) can be passed through the input param
+     * Get headers for previous encrypted payload.
+     * Already existing headers (e.g. the VAPID-signature) can be passed through the input param
      * and will be merged with the additional headers for the encryption
      * 
      * @param array $aHeaders   existing headers to merge with
      * @return array
      */
-    public function getHeaders($aHeaders=null) {
+    public function getHeaders(?array $aHeaders=null) : array 
+    {
         if (!$aHeaders) {
             $aHeaders = array();
         }
-        if (isset($this->strPayload)) {
+        if (strlen($this->strPayload) > 0) {
             $aHeaders['Content-Type'] = 'application/octet-stream';
             $aHeaders['Content-Encoding'] = $this->strEncoding;
             if ($this->strEncoding === "aesgcm") {
@@ -163,15 +173,16 @@ class PNEncryption
     /**
      * @return string last error
      */
-    public function getError() {
+    public function getError() : string 
+    {
         return $this->strError;
     }
     
     /**
      * create local public/private key pair using prime256v1 curve
-     * @return boolean
+     * @return bool
      */
-    private function createLocalKey()
+    private function createLocalKey() : bool
     {
         $bSucceeded = false;
         $keyResource = \openssl_pkey_new(['curve_name' => 'prime256v1', 'private_key_type' => OPENSSL_KEYTYPE_EC]);
@@ -199,12 +210,13 @@ class PNEncryption
      * build shared secret from user public key and local private key using prime256v1 curve 
      * @return string
      */
-    private function getSharedSecret() {
+    private function getSharedSecret() : string 
+    {
 
         $curve = NistCurve::curve256();
         
-        $x = null;
-        $y = null;
+        $x = '';
+        $y = '';
         self::getXYFromPublicKey($this->strSubscrKey, $x, $y);
         
         $strSubscrKeyPoint = $curve->getPublicKeyFrom(\gmp_init(bin2hex($x), 16), \gmp_init(bin2hex($y), 16));
@@ -222,7 +234,7 @@ class PNEncryption
      * @param string $strSharedSecret
      * @return string
      */
-    private function getPRK($strSharedSecret)
+    private function getPRK(string $strSharedSecret) : string
     {
         if (!empty($this->strSubscrAuth)) {
             if ($this->strEncoding === "aesgcm") {
@@ -245,20 +257,18 @@ class PNEncryption
      * @return null|string
      * @throws \ErrorException
      */
-    private function createContext()
+    private function createContext() : ?string
     {
         if ($this->strEncoding === "aes128gcm") {
             return null;
         }
 
-        if (mb_strlen($this->strSubscrKey, '8bit') !== 65) {
-            throw new \ErrorException('Invalid client public key length');
-        }
-
         // This one should never happen, because it's our code that generates the key
+        /*
         if (mb_strlen($this->strLocalPublicKey, '8bit') !== 65) {
             throw new \ErrorException('Invalid server public key length');
         }
+        */
 
         $len = chr(0) . 'A'; // 65 as Uint16BE
 
@@ -275,7 +285,7 @@ class PNEncryption
      * @return string
      * @throws \ErrorException
      */
-    private function createInfo($strType, $strContext)
+    private function createInfo(string $strType, ?string $strContext) : string
     {
         if ($this->strEncoding === "aesgcm") {
             if (!$strContext) {
@@ -297,7 +307,7 @@ class PNEncryption
      * get the content coding header to add to encrypted payload
      * @return string
      */
-    private function getContentCodingHeader()
+    private function getContentCodingHeader() : string
     {
         $strHeader = '';
         if ($this->strEncoding === "aes128gcm") {
@@ -318,19 +328,20 @@ class PNEncryption
      * additionalpadding.
      * 
      * @param string $strPayload
-     * @param number $iMaxLengthToPad
+     * @param int $iMaxLengthToPad
      * @return string
      */
-    private function padPayload($strPayload, $iMaxLengthToPad=0)
+    private function padPayload(string $strPayload, int $iMaxLengthToPad=0) : string
     {
         $iLen = mb_strlen($strPayload, '8bit');
         $iPad = $iMaxLengthToPad ? $iMaxLengthToPad - $iLen : 0;
     
         if ($this->strEncoding === "aesgcm") {
-            return pack('n*', $iPad) . str_pad($strPayload, $iPad + $iLen, chr(0), STR_PAD_LEFT);
+            $strPayload = pack('n*', $iPad) . str_pad($strPayload, $iPad + $iLen, chr(0), STR_PAD_LEFT);
         } elseif ($this->strEncoding === "aes128gcm") {
-            return str_pad($strPayload . chr(2), $iPad + $iLen, chr(0), STR_PAD_RIGHT);
+            $strPayload = str_pad($strPayload . chr(2), $iPad + $iLen, chr(0), STR_PAD_RIGHT);
         }
+        return $strPayload;
     }
 
     /**
@@ -353,7 +364,7 @@ class PNEncryption
      *
      * @return string
      */
-    private static function hkdf($salt, $ikm, $info, $length)
+    private static function hkdf(string $salt, string $ikm, string $info, int $length) : string
     {
         // extract
         $prk = hash_hmac('sha256', $ikm, $salt, true);

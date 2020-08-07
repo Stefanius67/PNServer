@@ -1,4 +1,6 @@
 <?php
+declare(strict_types = 1);
+
 namespace SKien\PNServer;
 
 /**
@@ -10,12 +12,12 @@ namespace SKien\PNServer;
  * Most properties directly map the showNotification() options and are 
  * passed on directly within the service worker. 
  *
- * history:
- * date         version
- * 2020-04-12   initial version
+ * #### History
+ * - *2020-04-12*   initial version
+ * - *2020-08-03*   PHP 7.4 type hint
  *
- * @package PNServer
- * @version 1.0.0
+ * @package SKien/PNServer
+ * @version 1.1.0
  * @author Stefanius <s.kien@online.de>
  * @copyright MIT License - see the LICENSE file for details
  */
@@ -23,8 +25,8 @@ class PNPayload
 {
     use PNServerHelper;
     
-    /** @var array   */
-    protected $aPayload;
+    /** @var array  */
+    protected array $aPayload;
 
     /**
      * Create instance of payload with title, text and icon to display.
@@ -36,25 +38,27 @@ class PNPayload
      *   is no exact specification for the 'optimal' size, 64dp (px * device pixel ratio)
      *   should be a good decision (... 192px for highest device pixel ratio)
      *     
-     * @param unknown $strTitle     Title to display
-     * @param string $strText       A string representing an extra content to display within the notification.
-     * @param string $strIcon       containing the URL of an image to be used as an icon by the notification.
+     * @param string $strTitle Title to display
+     * @param string $strText A string representing an extra content to display within the notification.
+     * @param string $strIcon containing the URL of an image to be used as an icon by the notification.
      */
-    public function __construct($strTitle, $strText=null, $strIcon=null) {
+    public function __construct(string $strTitle, ?string $strText=null, ?string $strIcon=null) 
+    {
         $this->aPayload = array(
                 'title' => $strTitle,
                 'opt' => array(
                         'body' => $strText,
-                        'icon' => $strIcon
+                        'icon' => $strIcon,
                     ),
             );
     }
     
     /**
-     * Note: the URL is no part of the showNotification()- Options!
+     * Note: the URL is no part of the JS showNotification() - Options!
      * @param string $strURL    URL to open when user click on the notification.
      */
-    public function setURL($strURL) {
+    public function setURL(string $strURL) : void
+    {
         if (is_array($this->aPayload) && isset($this->aPayload['opt']) && is_array($this->aPayload['opt'])) {
             if (!isset($this->aPayload['opt']['data']) || !is_array($this->aPayload['opt']['data'] )) {
                 $this->aPayload['opt']['data'] = array();
@@ -72,7 +76,8 @@ class PNPayload
      * @param string $strTag
      * @param bool $bReNotify
      */
-    public function setTag($strTag, $bReNotify=false) {
+    public function setTag(string $strTag, bool $bReNotify=false) : void
+    {
         if (is_array($this->aPayload) && isset($this->aPayload['opt']) && is_array($this->aPayload['opt'])) {
             $this->aPayload['opt']['tag'] = $strTag;
             $this->aPayload['opt']['renotify'] = $bReNotify;
@@ -84,7 +89,8 @@ class PNPayload
      * Size, position and cropping vary with the different browsers and platforms
      * @param string $strImage
      */
-    public function setImage($strImage) {
+    public function setImage(string $strImage) : void
+    {
         if (is_array($this->aPayload) && isset($this->aPayload['opt']) && is_array($this->aPayload['opt'])) {
             $this->aPayload['opt']['image'] = $strImage;
         }
@@ -99,7 +105,8 @@ class PNPayload
      *  
      * @param string $strBadge
      */
-    public function setBadge($strBadge) {
+    public function setBadge(string $strBadge) : void
+    {
         if (is_array($this->aPayload) && isset($this->aPayload['opt']) && is_array($this->aPayload['opt'])) {
             $this->aPayload['opt']['badge'] = $strBadge;
         }
@@ -119,7 +126,8 @@ class PNPayload
      * @param string $strIcon       containing the URL of an icon to display with the action.
      * @param string $strCustom     custom info - not part of the showNotification()- Options!
      */
-    public function addAction($strAction, $strTitle, $strIcon=null, $strCustom='') {
+    public function addAction(string $strAction, string $strTitle, ?string $strIcon=null, string $strCustom='') : void
+    {
         if (is_array($this->aPayload) && isset($this->aPayload['opt']) && is_array($this->aPayload['opt'])) {
             if (!isset($this->aPayload['opt']['actions']) || !is_array($this->aPayload['opt']['actions'] )) {
                 $this->aPayload['opt']['actions'] = array();
@@ -136,7 +144,8 @@ class PNPayload
      * 
      * @param mixed $timestamp  DateTime object, UNIX timestamp or English textual datetime description
      */
-    public function setTimestamp($timestamp) {
+    public function setTimestamp($timestamp) : void
+    {
         if (is_array($this->aPayload) && isset($this->aPayload['opt']) && is_array($this->aPayload['opt'])) {
             $iTimestamp = $timestamp;
             if (self::className($timestamp) == 'DateTime') {
@@ -147,7 +156,7 @@ class PNPayload
                 $iTimestamp = strtotime($timestamp);
             }
             // timestamp in milliseconds!
-            $this->aPayload['opt']['timestamp'] = bcmul($iTimestamp, 1000);
+            $this->aPayload['opt']['timestamp'] = bcmul((string)$iTimestamp, '1000');
         }
     }
     
@@ -159,7 +168,8 @@ class PNPayload
      * 
      * @param bool $bSet
      */
-    public function requireInteraction($bSet=true) {
+    public function requireInteraction(bool $bSet=true) : void
+    {
         if (is_array($this->aPayload) && isset($this->aPayload['opt']) && is_array($this->aPayload['opt'])) {
             $this->aPayload['opt']['requireInteraction'] = $bSet;
         }
@@ -170,7 +180,8 @@ class PNPayload
      * If this 'mute' function is activated, a previously set vibration is reset to prevent a TypeError exception.
      * @param bool $bSet
      */
-    public function setSilent($bSet=true) {
+    public function setSilent(bool $bSet=true) : void
+    {
         if (is_array($this->aPayload) && isset($this->aPayload['opt']) && is_array($this->aPayload['opt'])) {
             $this->aPayload['opt']['silent'] = $bSet;
             if ($bSet && isset($this->aPayload['opt']['vibrate'])) {
@@ -188,7 +199,8 @@ class PNPayload
      * 
      * @param array $aPattern
      */
-    public function setVibration($aPattern) {
+    public function setVibration(array $aPattern) : void
+    {
         if (is_array($this->aPayload) && isset($this->aPayload['opt']) && is_array($this->aPayload['opt'])) {
             $this->aPayload['opt']['vibrate'] = $aPattern;
             if (isset($this->aPayload['opt']['silent'])) {
@@ -203,16 +215,37 @@ class PNPayload
      * currently not found any browser supports sounds
      * @param string $strSound
      */
-    public function setSound($strSound) {
+    public function setSound(string $strSound) : void
+    {
         if (is_array($this->aPayload) && isset($this->aPayload['opt']) && is_array($this->aPayload['opt'])) {
             $this->aPayload['opt']['sound'] = $strSound;
         }
     }
     
     /**
+     * Get the Payload data as array
+     * @return array
+     */
+    public function getPayload() : array
+    {
+        return $this->aPayload;
+    }
+    
+    /**
+     * Convert payload dasta to JSON string.
      * @return string JSON string representing payloal
      */
-    public function toJSON() {
+    public function toJSON() : string
+    {
         return utf8_encode(json_encode($this->aPayload));       
     }
+    
+    /**
+     * @return string JSON string representing payloal
+     */
+    public function __toString() : string
+    {
+        return $this->toJSON();
+    }
+    
 }

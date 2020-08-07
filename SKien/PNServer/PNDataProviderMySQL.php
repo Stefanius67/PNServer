@@ -1,61 +1,62 @@
 <?php
-namespace SKien\PNServer;
+declare(strict_types = 1);
 
-use SKien\PNServer\PNDataProvider;
+namespace SKien\PNServer;
 
 /**
  * dataprovider for MySQL database
  * uses given Table in specified MySQL database
  * 
- * if not specified in constructor, default table 'tPNSubscription' in 
+ * if not specified in constructor, default table self::TABLE_NAME in 
  * MySQL database is used. 
  * table will be created if not exist so far.
  * 
- * history:
- * date         version
- * 2020-04-02   initial version
+ * #### History
+ * - *2020-04-02*   initial version
+ * - *2020-08-03*   PHP 7.4 type hint
  * 
- * @package PNServer
- * @version 1.0.0
+ * @package SKien/PNServer
+ * @version 1.1.0
  * @author Stefanius <s.kien@online.de>
  * @copyright MIT License - see the LICENSE file for details
 */
 class PNDataProviderMySQL implements PNDataProvider 
 {
     /** @var string tablename            */
-    protected   $strTableName;
+    protected   string $strTableName = '';
     /** @var string DB host  */
-    protected   $strDBHost = 'localhost';
+    protected   string $strDBHost = '';
     /** @var string DB user  */
-    protected   $strDBUser = 'root';
+    protected   string $strDBUser = '';
     /** @var string Password for DB  */
-    protected   $strDBPwd = 'kien1';
+    protected   string $strDBPwd = '';
     /** @var string DB name  */
-    protected   $strDBName;
-    /** @var \mysqli internal MySQL DB   */
-    protected   $db = null;
-    /** @var \mysqli_result result of DB queries */
+    protected   string $strDBName = '';
+    /** @var \mysqli|bool internal MySQL DB  (No type hint, as \mysqli or bool is possible type)  */
+    protected   $db = false;
+    /** @var \mysqli_result|bool result of DB queries  (No type hint, as \mysqli_result or bool is possible type) */
     protected   $dbres = false;
     /** @var array last fetched row or null      */
-    protected   $row = null;
+    protected   ?array $row = null;
     /** @var string last error                   */
-    protected   $strLastError;
+    protected   string $strLastError = '';
     /** @var bool does table exist               */
-    protected   $bTableExist = null;
+    protected   ?bool $bTableExist = null;
     
     /**
      * @param string $strDBHost     DB Host
      * @param string $strDBUser     DB User
      * @param string $strDBPwd      DB Password
      * @param string $strDBName     DB Name
-     * @param string $strTableName  tablename for the subscriptions - if null, 'tPNSubscription' is used and created if not exist
+     * @param string $strTableName  tablename for the subscriptions - if null, self::TABLE_NAME is used and created if not exist
      */
-    public function __construct($strDBHost, $strDBUser, $strDBPwd, $strDBName, $strTableName=null) {
+    public function __construct(string $strDBHost, string $strDBUser, string $strDBPwd, string $strDBName, ?string $strTableName=null) 
+    {
         $this->strDBHost = $strDBHost; 
         $this->strDBUser = $strDBUser; 
         $this->strDBPwd = $strDBPwd; 
         $this->strDBName = $strDBName; 
-        $this->strTableName = isset($strTableName) ? $strTableName : 'tPNSubscription';
+        $this->strTableName = isset($strTableName) ? $strTableName : self::TABLE_NAME;
         
         $this->db = @mysqli_connect($strDBHost, $strDBUser, $strDBPwd, $strDBName);
         if ($this->db !== false) {
@@ -68,32 +69,38 @@ class PNDataProviderMySQL implements PNDataProvider
     }
 
     /**
-     * (non-PHPdoc)
-     * @see \lib\PNServer\PNDataProvider::isConnected()
+     * {@inheritDoc}
+     * @see PNDataProvider::isConnected()
      */
-    public function isConnected() {
+    public function isConnected() : bool 
+    {
         if (!$this->db) {
             if (strlen($this->strLastError) == 0) {
                 $this->strLastError = 'no database connected!';
             }
         } else if (!$this->tableExist()) {
+            // Condition cannot be forced to test
+            // - can only occur during development using invalid SQL-statement for creation!
+            // @codeCoverageIgnoreStart
             if (strlen($this->strLastError) == 0) {
                 $this->strLastError = 'database table ' . $this->strTableName . ' not exist!';
             }
+            // @codeCoverageIgnoreEnd
         }
         return ($this->db && $this->bTableExist);
     }
     
     /**
-     * (non-PHPdoc)
-     * @see \lib\PNServer\PNDataProvider::saveSubscription()
+     * {@inheritDoc}
+     * @see PNDataProvider::saveSubscription()
      */
-    public function saveSubscription($strJSON) {
+    public function saveSubscription(string $strJSON) : bool 
+    {
         $bSucceeded = false;
         if ($this->db) {
             $oSubscription = json_decode($strJSON, true);
             if ($oSubscription) {
-                $iExpires = isset($oSubscription['expirationTime']) ? bcdiv($oSubscription['expirationTime'], 1000) : 0;
+                $iExpires = isset($oSubscription['expirationTime']) ? intval(bcdiv($oSubscription['expirationTime'], '1000')) : 0;
                 $tsExpires = $iExpires > 0 ? date("'Y-m-d H:i:s'", $iExpires) : 'NULL';
                 $strUserAgent = isset($oSubscription['userAgent']) ? $oSubscription['userAgent'] : 'unknown UserAgent';
                                 
@@ -108,23 +115,26 @@ class PNDataProviderMySQL implements PNDataProvider
                 $strSQL .= ",'" . $strJSON . "'";
                 $strSQL .= ",'" . $strUserAgent . "'";
                 $strSQL .= ") ";
-                $strSQL .= "ON DUPLICATE KEY UPDATE ";  // in case of UPDATE UA couldn't have been changed - endpoint is the UNIQUE key!
+                $strSQL .= "ON DUPLICATE KEY UPDATE ";  // in case of UPDATE UA couldn't have been changed and endpoint is the UNIQUE key!
                 $strSQL .= " expires = " . $tsExpires;
                 $strSQL .= ",subscription = '" . $strJSON . "'";
                 $strSQL .= ";";
                 
                 $bSucceeded = $this->db->query($strSQL);
                 $this->strLastError = $this->db->error;
+            } else {
+                $this->strLastError = 'Error json_decode: ' . json_last_error_msg();
             }
         }
         return $bSucceeded;
     }
     
     /**
-     * (non-PHPdoc)
-     * @see \lib\PNServer\PNDataProvider::removeSubscription()
+     * {@inheritDoc}
+     * @see PNDataProvider::removeSubscription()
      */
-    public function removeSubscription($strEndpoint) {
+    public function removeSubscription(string $strEndpoint) : bool 
+    {
         $bSucceeded = false;
         if ($this->db) {
             $strSQL  = "DELETE FROM " . $this->strTableName . " WHERE endpoint LIKE ";
@@ -137,16 +147,16 @@ class PNDataProviderMySQL implements PNDataProvider
     }
     
     /**
-     * select all subscriptions not expired so far
-     * 
+     * Select all subscriptions not expired so far.
      * columns expired and lastupdated are timestamp for better handling and visualization 
      * e.g. in phpMyAdmin. For compatibility reasons with other dataproviders the query 
      * selects the unis_timestamp values  
      * 
-     * (non-PHPdoc)
-     * @see \lib\PNServer\PNDataProvider::init()
+     * {@inheritDoc}
+     * @see PNDataProvider::init()
      */
-    public function init($bAutoRemove=true) {
+    public function init(bool $bAutoRemove=true) : bool 
+    {
         $bSucceeded = false;
         $this->dbres = false;
         $this->row = null;
@@ -155,7 +165,7 @@ class PNDataProviderMySQL implements PNDataProvider
             if ($bAutoRemove) {
                 // remove expired subscriptions from DB
                 $strSQL = "DELETE FROM " . $this->strTableName . " WHERE ";
-                $strSQL .= self::COL_EXPIRES . " != NULL AND ";
+                $strSQL .= self::COL_EXPIRES . " IS NOT NULL AND ";
                 $strSQL .= self::COL_EXPIRES . " < NOW()";
             
                 $bSucceeded = $this->db->query($strSQL);
@@ -165,7 +175,7 @@ class PNDataProviderMySQL implements PNDataProvider
             } else {
                 // or just exclude them from query
                 $strWhere  = " WHERE ";
-                $strWhere .= self::COL_EXPIRES . " = NULL OR ";
+                $strWhere .= self::COL_EXPIRES . " IS NULL OR ";
                 $strWhere .= self::COL_EXPIRES . " >= NOW()";
                 $bSucceeded = true;
             }
@@ -181,8 +191,11 @@ class PNDataProviderMySQL implements PNDataProvider
     
                 $this->dbres = $this->db->query($strSQL);
                 if ($this->dbres === false) {
+                    // @codeCoverageIgnoreStart
+                    // can only occur during development!
                     $this->strLastError = 'MySQL: ' . $this->db->error;
                     $bSucceeded = false;
+                    // @codeCoverageIgnoreEnd
                 }
             }
         }
@@ -190,24 +203,26 @@ class PNDataProviderMySQL implements PNDataProvider
     }
 
     /**
-     * (non-PHPdoc)
-     * @see \lib\PNServer\PNDataProvider::count()
+     * {@inheritDoc}
+     * @see PNDataProvider::count()
      */
-    public function count() {
+    public function count() : int 
+    {
         $iCount = 0;
         if ($this->db) {
             $dbres = $this->db->query("SELECT count(*) AS iCount FROM " . $this->strTableName);
             $row = $dbres->fetch_array(MYSQLI_ASSOC);
-            $iCount = $row['iCount'];
+            $iCount = intval($row['iCount']);
         }
         return $iCount;
     }
     
     /**
-     * (non-PHPdoc)
-     * @see \lib\PNServer\PNDataProvider::fetch()
+     * {@inheritDoc}
+     * @see PNDataProvider::fetch()
      */
-    public function fetch() {
+    public function fetch() 
+    {
         $strSubJSON = false;
         if ($this->dbres !== false) {
             $this->row = $this->dbres->fetch_array(MYSQLI_ASSOC);
@@ -219,10 +234,24 @@ class PNDataProviderMySQL implements PNDataProvider
     }
     
     /**
-     * (non-PHPdoc)
-     * @see \lib\PNServer\PNDataProvider::getColumn()
+     * {@inheritDoc}
+     * @see PNDataProvider::truncate()
      */
-    public function getColumn($strName) {
+    public function truncate() : bool
+    {
+        $bSucceeded = false;
+        if ($this->isConnected()) {
+            $bSucceeded = $this->db->query("TRUNCATE TABLE " . $this->strTableName);
+        }
+        return $bSucceeded;
+    }
+    
+    /**
+     * {@inheritDoc}
+     * @see PNDataProvider::getColumn()
+     */
+    public function getColumn(string $strName) : ?string 
+    {
         $value = null;
         if ($this->row !== false && isset($this->row[$strName])) {
             $value = $this->row[$strName];
@@ -237,7 +266,7 @@ class PNDataProviderMySQL implements PNDataProvider
      * get last error
      * @return string
      */
-    public function getError()
+    public function getError() : string
     {
         return $this->strLastError;
     }
@@ -246,7 +275,8 @@ class PNDataProviderMySQL implements PNDataProvider
      * check, if table exist
      * @return bool
      */
-    private function tableExist() {
+    private function tableExist() : bool 
+    {
         if ($this->bTableExist === null) {
             if ($this->db) {
                 $dbres = $this->db->query("SHOW TABLES LIKE '" . $this->strTableName . "'");
@@ -259,7 +289,8 @@ class PNDataProviderMySQL implements PNDataProvider
     /**
      * create table if not exist
      */
-    private function createTable() {
+    private function createTable() : bool 
+    {
         $bSucceeded = false;
         if ($this->db) {
             $strSQL  = "CREATE TABLE IF NOT EXISTS " . $this->strTableName . " (";

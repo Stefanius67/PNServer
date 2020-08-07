@@ -37,8 +37,6 @@ namespace SKien\PNServer\Utils;
  * ***********************************************************************
  */
 
-use SKien\PNServer\Utils\Point;
-
 /**
  * @internal
  */
@@ -47,7 +45,7 @@ class NistCurve
     /**
      * Returns an NIST P-256 curve.
      */
-    public static function curve256()
+    public static function curve256() : Curve
     {
         $p = \gmp_init('ffffffff00000001000000000000000000000000ffffffffffffffffffffffff', 16);
         $a = \gmp_init('ffffffff00000001000000000000000000000000fffffffffffffffffffffffc', 16);

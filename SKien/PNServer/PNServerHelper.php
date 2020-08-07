@@ -1,20 +1,29 @@
 <?php
+declare(strict_types = 1);
+
 namespace SKien\PNServer;
 
 /**
  * helper trait containing some methods used by multiple classes in package
  *
- * @package lib\PNServer
+ * #### History
+ * - *2020-04-12*   initial version
+ * - *2020-08-03*   PHP 7.4 type hint
+ * 
+ * @package SKien\PNServer
+ * @version 1.1.0
  * @author Stefanius <s.kien@online.de>
+ * @copyright MIT License - see the LICENSE file for details
  */
 trait PNServerHelper
 {
     /**
-     * get classname without namespace
+     * Get classname without namespace.
      * @param mixed $o
      * @return string
      */
-    public static function className($o) {
+    public static function className($o) : string
+    {
         $strName = '';
         if (is_object($o)) {
             $path = explode('\\', get_class($o));
@@ -24,34 +33,30 @@ trait PNServerHelper
     }
     
     /**
-     * Encode data to Base64URL
-     * 
+     * Encode data to Base64URL.
      * @param string $data
-     * @return boolean|string
+     * @return string   encoded string
      */
-    public static function encodeBase64URL($data) {
-        // First of all you should encode $data to Base64 string
-        $b64 = base64_encode($data);
-    
-        // Make sure you get a valid result, otherwise, return FALSE, as the base64_encode() function do
-        if ($b64 === false) {
-            return false;
-        }
+    public static function encodeBase64URL(string $data) : string 
+    {
         // Convert Base64 to Base64URL by replacing “+” with “-” and “/” with “_”
-        $url = strtr($b64, '+/', '-_');
+        $url = strtr(base64_encode($data), '+/', '-_');
     
         // Remove padding character from the end of line and return the Base64URL result
         return rtrim($url, '=');
     }
     
     /**
-     * Decode data from Base64URL
-     * 
+     * Decode data from Base64URL.
+     * If the strict parameter is set to TRUE then the function will return false
+     * if the input contains character from outside the base64 alphabet. Otherwise 
+     * invalid characters will be silently discarded.
      * @param string $data
      * @param boolean $strict
-     * @return boolean|string
+     * @return string|boolean   
      */
-    public static function decodeBase64URL($data, $strict = false) {
+    public static function decodeBase64URL(string $data, bool $strict = false)
+    {
         // Convert Base64URL to Base64 by replacing “-” with “+” and “_” with “/”
         $b64 = strtr($data, '-_', '+/');
     
@@ -59,7 +64,7 @@ trait PNServerHelper
         return base64_decode($b64, $strict);
     }   
 
-    public static function getP256PEM($strPublicKey, $strPrivateKey)
+    public static function getP256PEM(string $strPublicKey, string $strPrivateKey) : string
     {
         $der  = self::p256PrivateKey($strPrivateKey);
         $der .= $strPublicKey;
@@ -71,7 +76,7 @@ trait PNServerHelper
         return $pem;
     }
     
-    private static function p256PrivateKey($strPrivateKey)
+    private static function p256PrivateKey(string $strPrivateKey) : string
     {
         $key = unpack('H*', str_pad($strPrivateKey, 32, "\0", STR_PAD_LEFT))[1];
     
@@ -90,7 +95,7 @@ trait PNServerHelper
             );
     }
     
-    public static function signatureFromDER($der)
+    public static function signatureFromDER(string $der) : string
     {
         $sig = false;
         $R = false;
@@ -127,7 +132,7 @@ trait PNServerHelper
         return $sig;
     }
 
-    private static function retrievePosInt($data)
+    private static function retrievePosInt(string $data) : string
     {
         while ('00' === \mb_substr($data, 0, 2, '8bit') && \mb_substr($data, 2, 2, '8bit') > '7f') {
             $data = \mb_substr($data, 2, null, '8bit');
@@ -136,7 +141,7 @@ trait PNServerHelper
         return $data;
     }
 
-    public static function getXYFromPublicKey($strKey, &$x, &$y)
+    public static function getXYFromPublicKey(string $strKey, string &$x, string &$y) : bool
     {
         $bSucceeded = false;
         $hexData = bin2hex($strKey);

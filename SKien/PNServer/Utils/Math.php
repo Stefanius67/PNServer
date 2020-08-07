@@ -42,94 +42,93 @@ namespace SKien\PNServer\Utils;
  */
 class Math
 {
-    public static function cmp($first, $other)
+    public static function cmp(\GMP $first, \GMP $other) : int
     {
         return \gmp_cmp($first, $other);
     }
 
-    public static function equals($first, $other)
+    public static function equals(\GMP $first, \GMP $other) : bool
     {
         return 0 === \gmp_cmp($first, $other);
     }
 
-    public static function mod($number, $modulus)
+    public static function mod(\GMP $number, \GMP $modulus) : \GMP
     {
         return \gmp_mod($number, $modulus);
     }
 
-    public static function add($augend, $addend)
+    public static function add(\GMP $augend, \GMP $addend) : \GMP
     {
         return \gmp_add($augend, $addend);
     }
 
-    public static function sub($minuend, $subtrahend)
+    public static function sub(\GMP $minuend, \GMP $subtrahend) : \GMP
     {
         return \gmp_sub($minuend, $subtrahend);
     }
 
-    public static function mul($multiplier, $multiplicand)
+    public static function mul(\GMP $multiplier, \GMP $multiplicand) : \GMP
     {
         return \gmp_mul($multiplier, $multiplicand);
     }
 
-    public static function pow($base, $exponent)
+    public static function pow(\GMP $base, int $exponent) : \GMP 
     {
         return \gmp_pow($base, $exponent);
     }
 
-    public static function bitwiseAnd($first, $other)
+    public static function bitwiseAnd(\GMP $first, \GMP $other) : \GMP
     {
         return \gmp_and($first, $other);
     }
 
-    public static function bitwiseXor($first, $other)
+    public static function bitwiseXor(\GMP $first, \GMP $other) : \GMP
     {
         return \gmp_xor($first, $other);
     }
 
-    public static function toString($value)
+    public static function toString(\GMP  $value) : string
     {
         return \gmp_strval($value);
     }
 
-    public static function inverseMod($a, $m)
+    /**
+     * @param \GMP $a
+     * @param \GMP $m
+     * @return \GMP|bool
+     */
+    public static function inverseMod(\GMP $a, \GMP $m)
     {
         return \gmp_invert($a, $m);
     }
 
-    public static function baseConvert($number, $from, $to)
+    /**
+     * @param int|string $number
+     * @param int $from
+     * @param int $to
+     * @return string
+     */
+    public static function baseConvert($number, int $from, int $to) : string
     {
         return \gmp_strval(\gmp_init($number, $from), $to);
     }
 
-    public static function rightShift($number, $positions)
+    public static function rightShift(\GMP $number, int $positions) : \GMP 
     {
         return \gmp_div($number, \gmp_pow(\gmp_init(2, 10), $positions));
     }
-
-    public static function stringToInt($s)
-    {
-        $result = \gmp_init(0, 10);
-        $sLen = \mb_strlen($s, '8bit');
-
-        for ($c = 0; $c < $sLen; ++$c) {
-            $result = \gmp_add(\gmp_mul(256, $result), \gmp_init(\ord($s[$c]), 10));
-        }
-
-        return $result;
-    }
     
-  	public static function modSub($minuend, $subtrahend, $modulus)
+    public static function modSub(\GMP $minuend, \GMP $subtrahend, \GMP $modulus) : \GMP
    	{
    		return self::mod(self::sub($minuend, $subtrahend), $modulus);
    	}
     
-   	public static function modMul($multiplier, $muliplicand, $modulus)
+   	public static function modMul(\GMP $multiplier, \GMP $muliplicand, \GMP $modulus) : \GMP
    	{
    		return self::mod(self::mul($multiplier, $muliplicand), $modulus);
    	}
     
-   	public static function modDiv($dividend, $divisor, $modulus)
+   	public static function modDiv(\GMP $dividend, \GMP $divisor, \GMP $modulus) : \GMP
    	{
    		return self::mul($dividend, self::inverseMod($divisor, $modulus), $modulus);
    	}

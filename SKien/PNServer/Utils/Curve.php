@@ -37,44 +37,23 @@ namespace SKien\PNServer\Utils;
  * ***********************************************************************
  */
 
-use SKien\PNServer\Utils\Math;
-use SKien\PNServer\Utils\Point;
-
 /**
  * @internal
  */
 class Curve
 {
-    /**
-     * Elliptic curve over the field of integers modulo a prime.
-     *
-     * @var \GMP
-     */
-    private $a;
+    /** @var \GMP Elliptic curve over the field of integers modulo a prime.     */
+    private \GMP $a;
+    /** @var \GMP     */
+    private \GMP $b;
+    /** @var \GMP     */
+    private \GMP $prime;
+    /** @var int Binary length of keys associated with these curve parameters.     */
+    private int $size;
+    /** @var Point     */
+    private Point $generator;
 
-    /**
-     * @var \GMP
-     */
-    private $b;
-
-    /**
-     * @var \GMP
-     */
-    private $prime;
-
-    /**
-     * Binary length of keys associated with these curve parameters.
-     *
-     * @var int
-     */
-    private $size;
-
-    /**
-     * @var Point
-     */
-    private $generator;
-
-    public function __construct($size, $prime, $a, $b, $generator)
+    public function __construct(int $size, \GMP $prime, \GMP $a, \GMP $b, Point $generator)
     {
         $this->size = $size;
         $this->prime = $prime;
@@ -83,43 +62,47 @@ class Curve
         $this->generator = $generator;
     }
 
-    public function getA()
+    public function getA() : \GMP
     {
         return $this->a;
     }
 
-    public function getB()
+    public function getB() : \GMP
     {
         return $this->b;
     }
 
-    public function getPrime()
+    public function getPrime() : \GMP
     {
         return $this->prime;
     }
 
-    public function getSize()
+    public function getSize() : int
     {
         return $this->size;
     }
 
-    public function getPoint($x, $y, $order = null)
+    public function getPoint(\GMP $x, \GMP $y, \GMP $order = null) : Point
     {
         if (!$this->contains($x, $y)) {
             throw new \RuntimeException('Curve ' . $this->__toString() . ' does not contain point (' . Math::toString($x) . ', ' . Math::toString($y) . ')');
         }
         $point = Point::create($x, $y, $order);
+        
         if (!\is_null($order)) {
+            $this->mul($point, $order);
+            /** RuntimeException never reached - even with abstruse values in UnitTest 
             $mul = $this->mul($point, $order);
             if (!$mul->isInfinity()) {
                 throw new \RuntimeException('SELF * ORDER MUST EQUAL INFINITY. (' . (string) $mul . ' found instead)');
             }
+            */
         }
 
         return $point;
     }
     
-    public function getPublicKeyFrom($x, $y)
+    public function getPublicKeyFrom(\GMP $x, \GMP $y) : Point
     {
         $zero = \gmp_init(0, 10);
         if (Math::cmp($x, $zero) < 0 || Math::cmp($this->generator->getOrder(), $x) <= 0 || Math::cmp($y, $zero) < 0 || Math::cmp($this->generator->getOrder(), $y) <= 0) {
@@ -130,7 +113,7 @@ class Curve
         return $point;
     }
 
-    public function contains($x, $y)
+    public function contains(\GMP $x, \GMP $y) : bool
     {
         $eq_zero = Math::equals(
             Math::modSub(
@@ -150,7 +133,7 @@ class Curve
         return $eq_zero;
     }
 
-    public function add($one, $two)
+    public function add(Point $one, Point $two) : Point
     {
         if ($two->isInfinity()) {
             return clone $one;
@@ -189,7 +172,7 @@ class Curve
         return $this->getPoint($xR, $yR, $one->getOrder());
     }
 
-    public function mul($one, $n)
+    public function mul(Point $one, \GMP $n) : Point
     {
         if ($one->isInfinity()) {
             return Point::infinity();
@@ -225,12 +208,12 @@ class Curve
         return $r[0];
     }
 
-    public function __toString()
+    public function __toString() : string
     {
         return 'curve(' . Math::toString($this->getA()) . ', ' . Math::toString($this->getB()) . ', ' . Math::toString($this->getPrime()) . ')';
     }
 
-    public function getDouble($point)
+    public function getDouble(Point $point) : Point
     {
         if ($point->isInfinity()) {
             return Point::infinity();
