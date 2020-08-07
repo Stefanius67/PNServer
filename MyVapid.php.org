@@ -1,0 +1,17 @@
+<?php
+use SKien\PNServer\PNVapid;
+
+function getMyVapid()
+{
+    /**
+	 * set the generated VAPID key and rename to MyVapid.php
+	 *
+	 * you can generate your own VAPID key on https://tools.reactpwa.com/vapid.
+	 */
+     $oVapid = new PNVapid(
+     "mailto:yourmail@yourdomain.de",
+     "the-generated-public-key",
+     "the-generated-private-key"
+     );
+    return $oVapid;    
+}
