@@ -3,3 +3,7 @@
 /.project
 /*.sqlite
 /myVAPID.txt
+/MyVapid.php
+/phpunit.xml
+/SKien/Test/PNServer/coverage/
+/SKien/Test/PNServer/tempdata/
