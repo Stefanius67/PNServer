@@ -87,8 +87,8 @@ class PNServerTest extends TestCase
         $dp = $srv->getDP();
         $srv->loadSubscriptions();
         $this->assertTrue($srv->push());
-        // After notifications have been pushed, the 'gone' and 'notfound' entry should also been removed from the database!
-        $this->assertEquals(3, $dp->count());
+        // After notifications have been pushed, all entries except the valid one should have been removed from the database!
+        $this->assertEquals(1, $dp->count());
         
         return $srv;
     }
@@ -142,7 +142,7 @@ class PNServerTest extends TestCase
     /**
      * @depends test_push
      */
-    public function test_getLog(PNServer $srv)  : void
+    public function test_getLog(PNServer $srv)  : PNServer
     {
         $log = $srv->getLog();
         $this->assertIsArray($log);
@@ -154,6 +154,26 @@ class PNServerTest extends TestCase
             $this->assertEquals($aResponse[$i++], $aMsg['curl_response_code']);
             // fwrite(STDOUT, "\n" . $aMsg['msg'] . "\n");
         }
+        return $srv;
+    }
+    
+    /**
+     * @depends test_getLog
+     */
+    public function test_getSummary(PNServer $srv)  : void
+    {
+        $summary = $srv->getSummary();
+        $this->assertIsArray($summary);
+        $this->assertArrayHasKey('total', $summary);
+        $this->assertArrayHasKey('pushed', $summary);
+        $this->assertArrayHasKey('failed', $summary);
+        $this->assertArrayHasKey('expired', $summary);
+        $this->assertArrayHasKey('removed', $summary);
+        $this->assertEquals(6, $summary['total']);
+        $this->assertEquals(1, $summary['pushed']);
+        $this->assertEquals(4, $summary['failed']);
+        $this->assertEquals(1, $summary['expired']);
+        $this->assertEquals(5, $summary['removed']);
     }
     
     /**
@@ -174,7 +194,7 @@ class PNServerTest extends TestCase
         $srv = new PNServer($dp);
         $vapid = new PNVapid(VALID_SUBJECT, VALID_PUBLIC_KEY, VALID_PRIVATE_KEY);
         $srv->setVapid($vapid);
-        $srv->setPayload('Notification from phpUnit .-)');
+        $srv->setPayload('Greetings from phpUnit .-)');
         $this->assertIsObject($srv);
         
         return $srv;

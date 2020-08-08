@@ -33,6 +33,10 @@ class PNServer
     protected array $aSubscription = [];
     /** @var array          */
     protected array $aLog = [];
+    /** @var int $iAutoRemoved count of items autoremoved in loadSubscriptions */
+    protected int $iAutoRemoved = 0;
+    /** @var int $iExpired count of expired items */
+    protected int $iExpired = 0;
     /** @var string last error msg  */
     protected string $strError = '';
     
@@ -128,12 +132,18 @@ class PNServer
     {
         $bSucceeded = false;
         $this->aSubscription = [];
+        $this->iAutoRemoved = 0;
+        $this->iExpired = 0;
         if ($this->oDP) {
+            $iBefore = $this->oDP->count();
             if (($bSucceeded = $this->oDP->init($this->bAutoRemove)) !== false) {
                 $this->bFromDB = true;
+                $this->iAutoRemoved = $iBefore - $this->oDP->count();
                 while (($strJsonSub = $this->oDP->fetch()) !== false) {
                     $this->addSubscription(PNSubscription::fromJSON($strJsonSub));
                 }
+                // if $bAutoRemove is false, $this->iExpired may differs from $this->iAutoRemoved
+                $this->iExpired = $iBefore - count($this->aSubscription);
             } else {
                 $this->strError = $this->oDP->getError();
             }
@@ -211,7 +221,7 @@ class PNServer
                         $aLog['msg'] = 'VAPID error: ' . $this->oVapid->getError();
                     }
                 } else {
-                    $aLog['msg'] = 'Payload encrypting error: ' . $oEncrypt->getError();
+                    $aLog['msg'] = 'Payload encryption error: ' . $oEncrypt->getError();
                 }
                 if (strlen($aLog['msg']) > 0) {
                     $this->aLog[$oSub->getEndpoint()] = $aLog;
@@ -233,11 +243,6 @@ class PNServer
                     $aLog['msg'] = $this->getPushServiceResponseText($iRescode);
                     $aLog['curl_response'] = curl_multi_getcontent($curl);
                     $aLog['curl_response_code'] = $iRescode;
-                    if ($this->bFromDB && $this->bAutoRemove && ($iRescode == 404 || $iRescode == 410)) {
-                        // just remove subscription from DB
-                        $aLog['msg'] .= ' Subscription removed from DB!';
-                        $this->oDP->removeSubscription($strEndPoint);
-                    }
                     $this->aLog[$strEndPoint] = $aLog;
                     // remove handle from multi and close
                     curl_multi_remove_handle($mcurl, $curl);
@@ -245,6 +250,15 @@ class PNServer
                 }
                 // ... close the door
                 curl_multi_close($mcurl);
+            }
+            if ($this->bFromDB && $this->bAutoRemove) {
+                foreach ($this->aLog as $strEndPoint => $aLogItem) {
+                    if ($this->checkAutoRemove($aLogItem['curl_response_code'])) {
+                        // just remove subscription from DB
+                        $aLogItem['msg'] .= ' Subscription removed from DB!';
+                        $this->oDP->removeSubscription($strEndPoint);
+                    }
+                }
             }
         }
         return (strlen($this->strError) == 0);
@@ -257,6 +271,42 @@ class PNServer
     {
         return $this->aLog;
     }
+    
+    /**
+     * Build summary for the log of the last push operation.
+     * - total count of subscriptions processed<br/>
+     * - count of successfull pushed messages<br/>
+     * - count of failed messages (subscriptions couldn't be pushed of any reason)<br/>
+     * - count of expired subscriptions<br/>
+     * - count of removed subscriptions (expired, gone, not found, invalid)<br/>
+     * The count of expired entries removed in the loadSubscriptions() is added to
+     * the count of responsecode caused removed items.
+     * The count of failed and removed messages may differ even if $bAutoRemove is set
+     * if there are transferns with responsecode 413 or 429    
+     * @return array
+     */
+    public function getSummary() : array
+    {
+        $aSummary = [
+            'total' => $this->iExpired, 
+            'pushed' => 0, 
+            'failed' => 0, 
+            'expired' => $this->iExpired, 
+            'removed' => $this->iAutoRemoved,
+        ];
+        foreach ($this->aLog as $aLogItem) {
+            $aSummary['total']++;
+            if ($aLogItem['curl_response_code'] == 201) {
+                $aSummary['pushed']++;
+            } else {
+                $aSummary['failed']++;
+                if ($this->checkAutoRemove($aLogItem['curl_response_code'])) {
+                    $aSummary['removed']++;
+                }
+            }
+        }
+        return $aSummary;
+    }
 
     /**
      * @return string last error
@@ -264,6 +314,24 @@ class PNServer
     public function getError() : string
     {
         return $this->strError;
+    }
+    
+    /**
+     * Check if item should be removed.
+     * We remove items with responsecode<br/>
+     * -> 0: unknown responsecode (usually unknown/invalid endpoint origin)<br/>
+     * -> -1: Payload encryption error<br/>
+     * -> 400: Invalid request<br/>
+     * -> 404: Not Found<br/>
+     * -> 410: Gone<br/>
+     * 
+     * @param int $iRescode
+     * @return bool
+     */
+    protected function checkAutoRemove(int $iRescode) : bool
+    {
+        $aRemove = $this->bAutoRemove ? [-1, 0, 400, 404, 410] : [];
+        return in_array($iRescode, $aRemove);
     }
     
     /**
