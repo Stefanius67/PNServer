@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace SKien\PNServer;
 
@@ -23,25 +23,25 @@ namespace SKien\PNServer;
 class PNDataProviderMySQL implements PNDataProvider 
 {
     /** @var string tablename            */
-    protected   string $strTableName = '';
+    protected string $strTableName = '';
     /** @var string DB host  */
-    protected   string $strDBHost = '';
+    protected string $strDBHost = '';
     /** @var string DB user  */
-    protected   string $strDBUser = '';
+    protected string $strDBUser = '';
     /** @var string Password for DB  */
-    protected   string $strDBPwd = '';
+    protected string $strDBPwd = '';
     /** @var string DB name  */
-    protected   string $strDBName = '';
+    protected string $strDBName = '';
     /** @var \mysqli|bool internal MySQL DB  (No type hint, as \mysqli or bool is possible type)  */
-    protected   $db = false;
+    protected $db = false;
     /** @var \mysqli_result|bool result of DB queries  (No type hint, as \mysqli_result or bool is possible type) */
-    protected   $dbres = false;
+    protected $dbres = false;
     /** @var array last fetched row or null      */
-    protected   ?array $row = null;
+    protected ?array $row = null;
     /** @var string last error                   */
-    protected   string $strLastError = '';
+    protected string $strLastError = '';
     /** @var bool does table exist               */
-    protected   ?bool $bTableExist = null;
+    protected bool $bTableExist = false;
     
     /**
      * @param string $strDBHost     DB Host
@@ -50,7 +50,7 @@ class PNDataProviderMySQL implements PNDataProvider
      * @param string $strDBName     DB Name
      * @param string $strTableName  tablename for the subscriptions - if null, self::TABLE_NAME is used and created if not exist
      */
-    public function __construct(string $strDBHost, string $strDBUser, string $strDBPwd, string $strDBName, ?string $strTableName=null) 
+    public function __construct(string $strDBHost, string $strDBUser, string $strDBPwd, string $strDBName, ?string $strTableName = null) 
     {
         $this->strDBHost = $strDBHost; 
         $this->strDBUser = $strDBUser; 
@@ -105,7 +105,7 @@ class PNDataProviderMySQL implements PNDataProvider
                 $strUserAgent = isset($oSubscription['userAgent']) ? $oSubscription['userAgent'] : 'unknown UserAgent';
                                 
                 $strSQL  = "INSERT INTO " . $this->strTableName . " (";
-                $strSQL .=       self::COL_ENDPOINT;
+                $strSQL .= self::COL_ENDPOINT;
                 $strSQL .= "," . self::COL_EXPIRES;
                 $strSQL .= "," . self::COL_SUBSCRIPTION;
                 $strSQL .= "," . self::COL_USERAGENT;
@@ -115,12 +115,12 @@ class PNDataProviderMySQL implements PNDataProvider
                 $strSQL .= ",'" . $strJSON . "'";
                 $strSQL .= ",'" . $strUserAgent . "'";
                 $strSQL .= ") ";
-                $strSQL .= "ON DUPLICATE KEY UPDATE ";  // in case of UPDATE UA couldn't have been changed and endpoint is the UNIQUE key!
+                $strSQL .= "ON DUPLICATE KEY UPDATE "; // in case of UPDATE UA couldn't have been changed and endpoint is the UNIQUE key!
                 $strSQL .= " expires = " . $tsExpires;
                 $strSQL .= ",subscription = '" . $strJSON . "'";
                 $strSQL .= ";";
                 
-                $bSucceeded = $this->db->query($strSQL);
+                $bSucceeded = $this->db->query($strSQL) !== false;
                 $this->strLastError = $this->db->error;
             } else {
                 $this->strLastError = 'Error json_decode: ' . json_last_error_msg();
@@ -140,7 +140,7 @@ class PNDataProviderMySQL implements PNDataProvider
             $strSQL  = "DELETE FROM " . $this->strTableName . " WHERE endpoint LIKE ";
             $strSQL .= "'" . $strEndpoint . "'";
         
-            $bSucceeded = $this->db->query($strSQL);
+            $bSucceeded = $this->db->query($strSQL) !== false;
             $this->strLastError = $this->db->error;
         }
         return $bSucceeded;
@@ -155,7 +155,7 @@ class PNDataProviderMySQL implements PNDataProvider
      * {@inheritDoc}
      * @see PNDataProvider::init()
      */
-    public function init(bool $bAutoRemove=true) : bool 
+    public function init(bool $bAutoRemove = true) : bool 
     {
         $bSucceeded = false;
         $this->dbres = false;
@@ -181,7 +181,7 @@ class PNDataProviderMySQL implements PNDataProvider
             }
             if ($bSucceeded) {
                 $strSQL  = "SELECT ";
-                $strSQL .=       self::COL_ID;
+                $strSQL .= self::COL_ID;
                 $strSQL .= "," . self::COL_ENDPOINT;
                 $strSQL .= ",UNIX_TIMESTAMP(" . self::COL_EXPIRES . ") AS " . self::COL_EXPIRES;
                 $strSQL .= "," . self::COL_SUBSCRIPTION;
@@ -199,7 +199,7 @@ class PNDataProviderMySQL implements PNDataProvider
                 }
             }
         }
-        return ($this->dbres !== false);
+        return $bSucceeded;
     }
 
     /**
@@ -277,8 +277,7 @@ class PNDataProviderMySQL implements PNDataProvider
      */
     private function tableExist() : bool 
     {
-        if ($this->bTableExist === null) {
-            $this->bTableExist = false;
+        if (!$this->bTableExist) {
             if ($this->db) {
                 $dbres = $this->db->query("SHOW TABLES LIKE '" . $this->strTableName . "'");
                 $this->bTableExist = $dbres->num_rows > 0;
@@ -305,7 +304,7 @@ class PNDataProviderMySQL implements PNDataProvider
             $strSQL .= ",UNIQUE (endpoint(500))";
             $strSQL .= ") ENGINE=InnoDB;";
                 
-            $bSucceeded = $this->db->query($strSQL);
+            $bSucceeded = $this->db->query($strSQL) !== false;
             $this->strLastError = $this->db->error;
         }
         $this->bTableExist = $bSucceeded; 

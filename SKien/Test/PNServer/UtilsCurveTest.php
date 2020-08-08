@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace SKien\Test\PNServer;
 
@@ -30,9 +30,9 @@ class UtilsCurveTest extends TestCase
     public function test_create() : void
     {
         $this->assertEquals($this->cv->getSize(), 256);
-        $this->assertEquals((int)$this->cv->getA(), 9223372036854775804);
-        $this->assertEquals((int)$this->cv->getB(), 4309448131093880907);
-        $this->assertEquals((int)$this->cv->getPrime(), 9223372036854775807);
+        $this->assertEquals((int) $this->cv->getA(), 9223372036854775804);
+        $this->assertEquals((int) $this->cv->getB(), 4309448131093880907);
+        $this->assertEquals((int) $this->cv->getPrime(), 9223372036854775807);
     }
     
     public function test_getPoint() : void
@@ -71,12 +71,12 @@ class UtilsCurveTest extends TestCase
         $pt2 = Point::create(gmp_init(10), gmp_init(40));
         // result must be $pt1
         $pt = $this->cv->add($pt1, Point::infinity());
-        $this->assertSame((int)$pt1->getX(), (int)$pt->getX());
-        $this->assertSame((int)$pt1->getY(), (int)$pt->getY());
+        $this->assertSame((int) $pt1->getX(), (int) $pt->getX());
+        $this->assertSame((int) $pt1->getY(), (int) $pt->getY());
         // result must be $pt2
         $pt = $this->cv->add(Point::infinity(), $pt2);
-        $this->assertSame((int)$pt2->getX(), (int)$pt->getX());
-        $this->assertSame((int)$pt2->getY(), (int)$pt->getY());
+        $this->assertSame((int) $pt2->getX(), (int) $pt->getX());
+        $this->assertSame((int) $pt2->getY(), (int) $pt->getY());
         // result must be infinity
         $pt = $this->cv->add($pt1, $pt2);
         $this->assertTrue($pt->isInfinity());

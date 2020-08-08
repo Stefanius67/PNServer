@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace SKien\PNServer;
 
@@ -48,7 +48,7 @@ class PNServer
      *    
      * @param PNDataProvider $oDP
      */
-    public function __construct(?PNDataProvider $oDP=null)
+    public function __construct(?PNDataProvider $oDP = null)
     {
         $this->oDP = $oDP;
         $this->reset();
@@ -78,7 +78,7 @@ class PNServer
      * set VAPID subject and keys.
      * @param PNVapid $oVapid
      */
-    public function setVapid (PNVapid $oVapid) : void 
+    public function setVapid(PNVapid $oVapid) : void 
     {
         $this->oVapid = $oVapid;
     }
@@ -90,7 +90,7 @@ class PNServer
     public function setPayload($payload) : void 
     {
         if (is_string($payload) || self::className($payload) == 'PNPayload') {
-            $this->strPayload = (string)$payload;
+            $this->strPayload = (string) $payload;
         }
     }
     
@@ -140,7 +140,7 @@ class PNServer
                 $this->bFromDB = true;
                 $this->iAutoRemoved = $iBefore - $this->oDP->count();
                 while (($strJsonSub = $this->oDP->fetch()) !== false) {
-                    $this->addSubscription(PNSubscription::fromJSON($strJsonSub));
+                    $this->addSubscription(PNSubscription::fromJSON((string) $strJsonSub));
                 }
                 // if $bAutoRemove is false, $this->iExpired may differs from $this->iAutoRemoved
                 $this->iExpired = $iBefore - count($this->aSubscription);
@@ -158,7 +158,7 @@ class PNServer
      * has only affect, if data loaded through DataProvider 
      * @param bool $bAutoRemove
      */
-    public function setAutoRemove(bool $bAutoRemove=true) : void 
+    public function setAutoRemove(bool $bAutoRemove = true) : void 
     {
         $this->bAutoRemove = $bAutoRemove;
     }
@@ -179,84 +179,88 @@ class PNServer
     {
         if (!$this->oVapid) {
             $this->strError = 'no VAPID-keys set!';
-        } elseif(!$this->oVapid->isValid()) {
+        } elseif (!$this->oVapid->isValid()) {
             $this->strError = 'VAPID error: ' . $this->oVapid->getError();
-        } elseif(count($this->aSubscription) == 0) {
+        } elseif (count($this->aSubscription) == 0) {
             $this->strError = 'no valid Subscriptions set!';
         } else {
             // create multi requests...
             $mcurl = curl_multi_init();
-            $aRequests = array();
-            
-            foreach ($this->aSubscription as $oSub) {
-                $aLog = ['msg' => '', 'curl_response' => '', 'curl_response_code' => -1];
-                // payload must be encrypted every time although it does not change, since 
-                // each subscription has at least his public key and authentication token of its own ...
-                $oEncrypt = new PNEncryption($oSub->getPublicKey(), $oSub->getAuth(), $oSub->getEncoding()); 
-                if (($strContent = $oEncrypt->encrypt($this->strPayload)) !== false) {
-                    // merge headers from encryption and VAPID (maybe both containing 'Crypto-Key')
-                    if (($aVapidHeaders = $this->oVapid->getHeaders($oSub->getEndpoint())) !== false) {
-                        $aHeaders = $oEncrypt->getHeaders($aVapidHeaders);
-                        $aHeaders['Content-Length'] = mb_strlen($strContent, '8bit');
-                        $aHeaders['TTL'] = 2419200;
-            
-                        // build Http - Headers
-                        $aHttpHeader = array();
-                        foreach ($aHeaders as $strName => $strValue) {
-                            $aHttpHeader[] = $strName . ': ' . $strValue; 
-                        }
-                        
-                        // and send request with curl
-                        $curl = curl_init($oSub->getEndpoint());
-                        
-                        curl_setopt($curl, CURLOPT_POST, true);
-                        curl_setopt($curl, CURLOPT_POSTFIELDS, $strContent);
-                        curl_setopt($curl, CURLOPT_HTTPHEADER, $aHttpHeader);
-                        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-                        
-                        curl_multi_add_handle($mcurl, $curl);
-                        
-                        $aRequests[$oSub->getEndpoint()] = $curl;
-                    } else {
-                        $aLog['msg'] = 'VAPID error: ' . $this->oVapid->getError();
-                    }
-                } else {
-                    $aLog['msg'] = 'Payload encryption error: ' . $oEncrypt->getError();
-                }
-                if (strlen($aLog['msg']) > 0) {
-                    $this->aLog[$oSub->getEndpoint()] = $aLog;
-                }
-            }
+            if ($mcurl !== false) {
+                $aRequests = array();
                 
-            if (count($aRequests) > 0) {
-                // now performing multi request...
-                $iRunning = null;
-                do {
-                    curl_multi_exec($mcurl, $iRunning);
-                } while ($iRunning);
-
-                // ...and get response of each request
-                foreach ($aRequests as $strEndPoint => $curl) {
-                    $aLog = array();
-                    $iRescode = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
-                    
-                    $aLog['msg'] = $this->getPushServiceResponseText($iRescode);
-                    $aLog['curl_response'] = curl_multi_getcontent($curl);
-                    $aLog['curl_response_code'] = $iRescode;
-                    $this->aLog[$strEndPoint] = $aLog;
-                    // remove handle from multi and close
-                    curl_multi_remove_handle($mcurl, $curl);
-                    curl_close($curl);
+                foreach ($this->aSubscription as $oSub) {
+                    $aLog = ['msg' => '', 'curl_response' => '', 'curl_response_code' => -1];
+                    // payload must be encrypted every time although it does not change, since 
+                    // each subscription has at least his public key and authentication token of its own ...
+                    $oEncrypt = new PNEncryption($oSub->getPublicKey(), $oSub->getAuth(), $oSub->getEncoding()); 
+                    if (($strContent = $oEncrypt->encrypt($this->strPayload)) !== false) {
+                        // merge headers from encryption and VAPID (maybe both containing 'Crypto-Key')
+                        if (($aVapidHeaders = $this->oVapid->getHeaders($oSub->getEndpoint())) !== false) {
+                            $aHeaders = $oEncrypt->getHeaders($aVapidHeaders);
+                            $aHeaders['Content-Length'] = mb_strlen($strContent, '8bit');
+                            $aHeaders['TTL'] = 2419200;
+                
+                            // build Http - Headers
+                            $aHttpHeader = array();
+                            foreach ($aHeaders as $strName => $strValue) {
+                                $aHttpHeader[] = $strName . ': ' . $strValue; 
+                            }
+                            
+                            // and send request with curl
+                            $curl = curl_init($oSub->getEndpoint());
+                            
+                            if ($curl !== false) {
+                                curl_setopt($curl, CURLOPT_POST, true);
+                                curl_setopt($curl, CURLOPT_POSTFIELDS, $strContent);
+                                curl_setopt($curl, CURLOPT_HTTPHEADER, $aHttpHeader);
+                                curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+                            
+                                curl_multi_add_handle($mcurl, $curl);
+                            
+                                $aRequests[$oSub->getEndpoint()] = $curl;
+                            }
+                        } else {
+                            $aLog['msg'] = 'VAPID error: ' . $this->oVapid->getError();
+                        }
+                    } else {
+                        $aLog['msg'] = 'Payload encryption error: ' . $oEncrypt->getError();
+                    }
+                    if (strlen($aLog['msg']) > 0) {
+                        $this->aLog[$oSub->getEndpoint()] = $aLog;
+                    }
                 }
-                // ... close the door
-                curl_multi_close($mcurl);
-            }
-            if ($this->bFromDB && $this->bAutoRemove) {
-                foreach ($this->aLog as $strEndPoint => $aLogItem) {
-                    if ($this->checkAutoRemove($aLogItem['curl_response_code'])) {
-                        // just remove subscription from DB
-                        $aLogItem['msg'] .= ' Subscription removed from DB!';
-                        $this->oDP->removeSubscription($strEndPoint);
+                    
+                if (count($aRequests) > 0) {
+                    // now performing multi request...
+                    $iRunning = null;
+                    do {
+                        curl_multi_exec($mcurl, $iRunning);
+                    } while ($iRunning);
+    
+                    // ...and get response of each request
+                    foreach ($aRequests as $strEndPoint => $curl) {
+                        $aLog = array();
+                        $iRescode = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
+                        
+                        $aLog['msg'] = $this->getPushServiceResponseText($iRescode);
+                        $aLog['curl_response'] = curl_multi_getcontent($curl);
+                        $aLog['curl_response_code'] = $iRescode;
+                        $this->aLog[$strEndPoint] = $aLog;
+                        // remove handle from multi and close
+                        curl_multi_remove_handle($mcurl, $curl);
+                        curl_close($curl);
+                    }
+                    // ... close the door
+                    curl_multi_close($mcurl);
+                }
+                if ($this->oDP != null && $this->bFromDB && $this->bAutoRemove) {
+                    foreach ($this->aLog as $strEndPoint => $aLogItem) {
+                        if ($this->checkAutoRemove($aLogItem['curl_response_code'])) {
+                            // just remove subscription from DB
+                            $aLogItem['msg'] .= ' Subscription removed from DB!';
+                            $this->oDP->removeSubscription($strEndPoint);
+                        }
                     }
                 }
             }

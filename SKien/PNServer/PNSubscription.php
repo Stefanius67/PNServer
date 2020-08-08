@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace SKien\PNServer;
 
@@ -39,7 +39,7 @@ class PNSubscription
      * @param int $timeExpiration
      * @param string $strEncoding
      */
-    public function __construct(string $strEndpoint, string $strPublicKey, string $strAuth, int $timeExpiration=0, string $strEncoding='aesgcm') 
+    public function __construct(string $strEndpoint, string $strPublicKey, string $strAuth, int $timeExpiration=0, string $strEncoding = 'aesgcm') 
     {
         $this->strEndpoint = $strEndpoint;
         $this->strPublicKey = $strPublicKey;
@@ -90,7 +90,7 @@ class PNSubscription
                     isset($this->strEndpoint) && strlen($this->strEndpoint) > 0 &&
                     isset($this->strPublicKey) && strlen($this->strPublicKey) > 0 &&
                     isset($this->strAuth) && strlen($this->strAuth) > 0 &&
-                    ($this->strEncoding == 'aesgcm'|| $this->strEncoding == 'aes128gcm') 
+                    ($this->strEncoding == 'aesgcm' || $this->strEncoding == 'aes128gcm') 
                 );
         }
         return $bValid;

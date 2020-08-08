@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace SKien\Test\PNServer;
 
@@ -16,7 +16,7 @@ trait TestHelperTrait
         
     protected function loadSubscription(string $strFilename) : string
     {
-        return file_get_contents( __DIR__ . DIRECTORY_SEPARATOR . 'testdata' . DIRECTORY_SEPARATOR . $strFilename);
+        return file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'testdata' . DIRECTORY_SEPARATOR . $strFilename);
     }
     
     protected static function getTempDataDir() : string

@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace SKien\Test\PNServer;
 
@@ -54,17 +54,17 @@ class UtilsMathTest extends TestCase
     
     public function test_mod() : void
     {
-        $this->assertEquals((int)Math::mod(gmp_init(7), gmp_init(2)), 1);
+        $this->assertEquals((int) Math::mod(gmp_init(7), gmp_init(2)), 1);
     }
     
     public function test_add() : void
     {
-        $this->assertEquals((int)Math::add(gmp_init(2), gmp_init(3)), 5);
+        $this->assertEquals((int) Math::add(gmp_init(2), gmp_init(3)), 5);
     }
     
     public function test_sub() : void
     {
-        $this->assertEquals((int)Math::sub(gmp_init(2), gmp_init(3)), -1);
+        $this->assertEquals((int) Math::sub(gmp_init(2), gmp_init(3)), -1);
     }
     
     /**
@@ -72,7 +72,7 @@ class UtilsMathTest extends TestCase
      */
     public function test_mul(\GMP $a, \GMP $b, int $expected) : void
     {
-        $this->assertEquals($expected, (int)Math::mul($a, $b));
+        $this->assertEquals($expected, (int) Math::mul($a, $b));
     }
     
     public function mulProvider() : array
@@ -90,7 +90,7 @@ class UtilsMathTest extends TestCase
      */
     public function test_pow(\GMP $a, int $b, int $expected) : void
     {
-        $this->assertEquals($expected, (int)Math::pow($a, $b));
+        $this->assertEquals($expected, (int) Math::pow($a, $b));
     }
     
     public function powProvider() : array
@@ -105,17 +105,17 @@ class UtilsMathTest extends TestCase
     
     public function test_bitwiseAnd() : void
     {
-        $this->assertEquals((int)Math::bitwiseAnd(gmp_init('110011', 2), gmp_init('011110', 2)), (int)gmp_init('010010', 2));
+        $this->assertEquals((int) Math::bitwiseAnd(gmp_init('110011', 2), gmp_init('011110', 2)), (int)gmp_init('010010', 2));
     }
     
     public function test_bitwiseXor() : void
     {
-        $this->assertEquals((int)Math::bitwiseXor(gmp_init('110011', 2), gmp_init('011110', 2)), (int)gmp_init('101101', 2));
+        $this->assertEquals((int) Math::bitwiseXor(gmp_init('110011', 2), gmp_init('011110', 2)), (int)gmp_init('101101', 2));
     }
     
     public function test_rightShift() : void
     {
-        $this->assertEquals((int)Math::rightShift(gmp_init('110011', 2), 3), (int)gmp_init('110', 2));
+        $this->assertEquals((int) Math::rightShift(gmp_init('110011', 2), 3), (int)gmp_init('110', 2));
     }
     
     public function test_toString() : void
@@ -130,24 +130,24 @@ class UtilsMathTest extends TestCase
     
     public function test_inverseMod() : void
     {
-        $this->assertEquals(9, (int)Math::inverseMod(gmp_init(5), gmp_init(11)));
-        $this->assertEquals(11, (int)Math::inverseMod(gmp_init(-4), gmp_init(15)));
+        $this->assertEquals(9, (int) Math::inverseMod(gmp_init(5), gmp_init(11)));
+        $this->assertEquals(11, (int) Math::inverseMod(gmp_init(-4), gmp_init(15)));
         $this->assertFalse(Math::inverseMod(gmp_init(5), gmp_init(10)));
     }
     
     public function test_modSub() : void
     {
-        $this->assertEquals((int)Math::modSub(gmp_init(12), gmp_init(4), gmp_init(5)), 3);
+        $this->assertEquals((int) Math::modSub(gmp_init(12), gmp_init(4), gmp_init(5)), 3);
     }
     
     public function test_modMul() : void
     {
-        $this->assertEquals((int)Math::modMul(gmp_init(3), gmp_init(4), gmp_init(5)), 2);
+        $this->assertEquals((int) Math::modMul(gmp_init(3), gmp_init(4), gmp_init(5)), 2);
     }
     
     public function test_modDiv() : void
     {
-        $this->assertEquals((int)Math::modDiv(gmp_init(12), gmp_init(2), gmp_init(5)), 36);
+        $this->assertEquals((int) Math::modDiv(gmp_init(12), gmp_init(2), gmp_init(5)), 36);
     }
 }
 

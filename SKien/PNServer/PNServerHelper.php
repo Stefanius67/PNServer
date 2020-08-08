@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace SKien\PNServer;
 
@@ -69,9 +69,9 @@ trait PNServerHelper
         $der  = self::p256PrivateKey($strPrivateKey);
         $der .= $strPublicKey;
     
-        $pem = '-----BEGIN EC PRIVATE KEY-----'.PHP_EOL;
+        $pem = '-----BEGIN EC PRIVATE KEY-----' . PHP_EOL;
         $pem .= chunk_split(base64_encode($der), 64, PHP_EOL);
-        $pem .= '-----END EC PRIVATE KEY-----'.PHP_EOL;
+        $pem .= '-----END EC PRIVATE KEY-----' . PHP_EOL;
     
         return $pem;
     }
@@ -95,7 +95,11 @@ trait PNServerHelper
             );
     }
     
-    public static function signatureFromDER(string $der) : string
+    /**
+     * @param string $der
+     * @return bool|string
+     */
+    public static function signatureFromDER(string $der)
     {
         $sig = false;
         $R = false;
@@ -111,14 +115,14 @@ trait PNServerHelper
             }
             if ('02' === \mb_substr($hex, 0, 2, '8bit')) {
                 // INTEGER
-                $Rl = \hexdec(\mb_substr($hex, 2, 2, '8bit'));
+                $Rl = (int) \hexdec(\mb_substr($hex, 2, 2, '8bit'));
                 $R = self::retrievePosInt(\mb_substr($hex, 4, $Rl * 2, '8bit'));
                 $R = \str_pad($R, 64, '0', STR_PAD_LEFT);
             
                 $hex = \mb_substr($hex, 4 + $Rl * 2, null, '8bit');
                 if ('02' === \mb_substr($hex, 0, 2, '8bit')) {
                     // INTEGER
-                    $Sl = \hexdec(\mb_substr($hex, 2, 2, '8bit'));
+                    $Sl = (int) \hexdec(\mb_substr($hex, 2, 2, '8bit'));
                     $S = self::retrievePosInt(\mb_substr($hex, 4, $Sl * 2, '8bit'));
                     $S = \str_pad($S, 64, '0', STR_PAD_LEFT);
                 }
@@ -126,7 +130,7 @@ trait PNServerHelper
         }
         
         if ($R !== false && $S !== false) {
-            $sig = \pack('H*', $R.$S);
+            $sig = \pack('H*', $R . $S);
         }
     
         return $sig;

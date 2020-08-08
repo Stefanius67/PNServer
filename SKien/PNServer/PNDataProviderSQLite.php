@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace SKien\PNServer;
 
@@ -23,26 +23,26 @@ namespace SKien\PNServer;
 class PNDataProviderSQLite implements PNDataProvider 
 {
     /** @var string tablename                    */
-    protected   string $strTableName;
+    protected string $strTableName;
     /** @var string name of the DB file          */
-    protected   string $strDBName; 
+    protected string $strDBName; 
     /** @var \SQLite3 internal SqLite DB         */
-    protected   ?\SQLite3 $db = null;
+    protected ?\SQLite3 $db = null;
     /** @var \SQLite3Result|bool result of DB queries (no type hint - \SQLite3::query() returns \SQLite3Result|bool) */
-    protected   $dbres = false;
+    protected $dbres = false;
     /** @var array|bool last fetched row or false (no type hint - \SQLite3Result::fetchArray() returns array|bool)    */
-    protected   $row = false;
+    protected $row = false;
     /** @var string last error                   */
-    protected   string $strLastError;
+    protected string $strLastError;
     /** @var bool does table exist               */
-    protected   ?bool $bTableExist = null;
+    protected bool $bTableExist = false;
     
     /**
      * @param string $strDir        directory -  if null, current working directory assumed
      * @param string $strDBName     name of DB file - if null, file 'pnsub.sqlite' is used and created if not exist
      * @param string $strTableName  tablename for the subscriptions - if null, self::TABLE_NAME is used and created if not exist
      */
-    public function __construct(?string $strDir=null, ?string $strDBName=null, ?string $strTableName=null) 
+    public function __construct(?string $strDir = null, ?string $strDBName = null, ?string $strTableName = null) 
     {
         $this->strTableName = isset($strTableName) ? $strTableName : self::TABLE_NAME;
         $this->strDBName = isset($strDBName) ? $strDBName : 'pnsub.sqlite';
@@ -64,9 +64,9 @@ class PNDataProviderSQLite implements PNDataProvider
             $this->db = null;
             $this->strLastError = $e->getMessage();
             if (!file_exists($strDBName)) {
-                $strDir = pathinfo($strDBName, PATHINFO_DIRNAME) == '' ?  __DIR__ : pathinfo($strDBName, PATHINFO_DIRNAME);
+                $strDir = pathinfo($strDBName, PATHINFO_DIRNAME) == '' ? __DIR__ : pathinfo($strDBName, PATHINFO_DIRNAME);
                 if (!is_writable($strDir)) {
-                   $this->strLastError .= ' (no rights to write on directory ' . $strDir . ')';
+                    $this->strLastError .= ' (no rights to write on directory ' . $strDir . ')';
                 }
             }
         }
@@ -87,7 +87,7 @@ class PNDataProviderSQLite implements PNDataProvider
             // - can only occur during development using invalid SQL-statement for creation!
             // @codeCoverageIgnoreStart
             if (strlen($this->strLastError) == 0) {
-               $this->strLastError = 'database table ' . $this->strTableName . ' not exist!';
+                $this->strLastError = 'database table ' . $this->strTableName . ' not exist!';
             }
             // @codeCoverageIgnoreEnd
         }
@@ -104,12 +104,12 @@ class PNDataProviderSQLite implements PNDataProvider
         if ($this->isConnected()) {
             $oSubscription = json_decode($strJSON, true);
             if ($oSubscription) {
-                $iExpires = isset($oSubscription['expirationTime']) ? bcdiv((string)$oSubscription['expirationTime'], '1000') : 0;
+                $iExpires = isset($oSubscription['expirationTime']) ? bcdiv((string) $oSubscription['expirationTime'], '1000') : 0;
                 $strUserAgent = isset($oSubscription['userAgent']) ? $oSubscription['userAgent'] : 'unknown UserAgent';
                 
                 // insert or update - relevant is the endpoint as unique index 
                 $strSQL  = "REPLACE INTO " . $this->strTableName . " (";
-                $strSQL .=       self::COL_ENDPOINT;
+                $strSQL .= self::COL_ENDPOINT;
                 $strSQL .= "," . self::COL_EXPIRES;
                 $strSQL .= "," . self::COL_SUBSCRIPTION;
                 $strSQL .= "," . self::COL_USERAGENT;
@@ -153,7 +153,7 @@ class PNDataProviderSQLite implements PNDataProvider
      * {@inheritDoc}
      * @see PNDataProvider::init()
      */
-    public function init(bool $bAutoRemove=true) : bool 
+    public function init(bool $bAutoRemove = true) : bool 
     {
         $bSucceeded = false;
         $this->dbres = false;
@@ -181,7 +181,7 @@ class PNDataProviderSQLite implements PNDataProvider
                 $this->setSQLiteError($bSucceeded);
             }
         }
-        return (bool)$bSucceeded;
+        return (bool) $bSucceeded;
     }
 
     /**
@@ -255,8 +255,7 @@ class PNDataProviderSQLite implements PNDataProvider
      */
     private function tableExist() : bool 
     {
-        if ($this->bTableExist === null) {
-            $this->bTableExist = false;
+        if (!$this->bTableExist) {
             if ($this->db) {
                 $this->bTableExist = ($this->db->querySingle("SELECT name FROM sqlite_master WHERE type='table' AND name='" . $this->strTableName . "'") != null);
             }

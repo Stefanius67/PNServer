@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace SKien\Test\PNServer;
 
@@ -20,7 +20,7 @@ class PNDataProviderMySQLTest extends PNDataProviderTest
     public static function setUpBeforeClass() : void
     {
         $db = mysqli_connect($GLOBALS['MYSQL_HOST'], $GLOBALS['MYSQL_USER'], $GLOBALS['MYSQL_PASSWD'], $GLOBALS['MYSQL_DBNAME']);
-        if(!$db) {
+        if (!$db) {
             fwrite(STDOUT, 'MySQL: Connect Error ' . mysqli_connect_errno() . PHP_EOL);
         }
         $db->query("DROP TABLE IF EXISTS " . PNDataProviderMySQL::TABLE_NAME);

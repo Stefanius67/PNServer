@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace SKien\PNServer;
 
@@ -42,7 +42,7 @@ class PNPayload
      * @param string $strText A string representing an extra content to display within the notification.
      * @param string $strIcon containing the URL of an image to be used as an icon by the notification.
      */
-    public function __construct(string $strTitle, ?string $strText=null, ?string $strIcon=null) 
+    public function __construct(string $strTitle, ?string $strText = null, ?string $strIcon = null) 
     {
         $this->aPayload = array(
                 'title' => $strTitle,
@@ -60,7 +60,7 @@ class PNPayload
     public function setURL(string $strURL) : void
     {
         if (is_array($this->aPayload) && isset($this->aPayload['opt']) && is_array($this->aPayload['opt'])) {
-            if (!isset($this->aPayload['opt']['data']) || !is_array($this->aPayload['opt']['data'] )) {
+            if (!isset($this->aPayload['opt']['data']) || !is_array($this->aPayload['opt']['data'])) {
                 $this->aPayload['opt']['data'] = array();
             }
             $this->aPayload['opt']['data']['url'] = $strURL;
@@ -76,7 +76,7 @@ class PNPayload
      * @param string $strTag
      * @param bool $bReNotify
      */
-    public function setTag(string $strTag, bool $bReNotify=false) : void
+    public function setTag(string $strTag, bool $bReNotify = false) : void
     {
         if (is_array($this->aPayload) && isset($this->aPayload['opt']) && is_array($this->aPayload['opt'])) {
             $this->aPayload['opt']['tag'] = $strTag;
@@ -126,10 +126,10 @@ class PNPayload
      * @param string $strIcon       containing the URL of an icon to display with the action.
      * @param string $strCustom     custom info - not part of the showNotification()- Options!
      */
-    public function addAction(string $strAction, string $strTitle, ?string $strIcon=null, string $strCustom='') : void
+    public function addAction(string $strAction, string $strTitle, ?string $strIcon = null, string $strCustom = '') : void
     {
         if (is_array($this->aPayload) && isset($this->aPayload['opt']) && is_array($this->aPayload['opt'])) {
-            if (!isset($this->aPayload['opt']['actions']) || !is_array($this->aPayload['opt']['actions'] )) {
+            if (!isset($this->aPayload['opt']['actions']) || !is_array($this->aPayload['opt']['actions'])) {
                 $this->aPayload['opt']['actions'] = array();
             }
             $this->aPayload['opt']['actions'][] = array('action' => $strAction, 'title' => $strTitle, 'icon' => $strIcon, 'custom' => $strCustom);
@@ -156,7 +156,7 @@ class PNPayload
                 $iTimestamp = strtotime($timestamp);
             }
             // timestamp in milliseconds!
-            $this->aPayload['opt']['timestamp'] = bcmul((string)$iTimestamp, '1000');
+            $this->aPayload['opt']['timestamp'] = bcmul((string) $iTimestamp, '1000');
         }
     }
     
@@ -168,7 +168,7 @@ class PNPayload
      * 
      * @param bool $bSet
      */
-    public function requireInteraction(bool $bSet=true) : void
+    public function requireInteraction(bool $bSet = true) : void
     {
         if (is_array($this->aPayload) && isset($this->aPayload['opt']) && is_array($this->aPayload['opt'])) {
             $this->aPayload['opt']['requireInteraction'] = $bSet;
@@ -180,7 +180,7 @@ class PNPayload
      * If this 'mute' function is activated, a previously set vibration is reset to prevent a TypeError exception.
      * @param bool $bSet
      */
-    public function setSilent(bool $bSet=true) : void
+    public function setSilent(bool $bSet = true) : void
     {
         if (is_array($this->aPayload) && isset($this->aPayload['opt']) && is_array($this->aPayload['opt'])) {
             $this->aPayload['opt']['silent'] = $bSet;

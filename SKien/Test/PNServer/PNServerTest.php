@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace SKien\Test\PNServer;
 
@@ -147,9 +147,9 @@ class PNServerTest extends TestCase
         $log = $srv->getLog();
         $this->assertIsArray($log);
         $this->assertEquals(5, count($log));
-        $aResponse = [-1, 201, 404, 410, 0];    // Encryption error, OK, Not Found, Gone. inv. Endpoint
+        $aResponse = [-1, 201, 404, 410, 0]; // Encryption error, OK, Not Found, Gone. inv. Endpoint
         $i = 0;
-        foreach ($log as $strEndpoint => $aMsg ) {
+        foreach ($log as $strEndpoint => $aMsg) {
             $this->assertNotEmpty($strEndpoint);
             $this->assertEquals($aResponse[$i++], $aMsg['curl_response_code']);
             // fwrite(STDOUT, "\n" . $aMsg['msg'] . "\n");

@@ -1,6 +1,10 @@
 # PNServer - Web Push Notifications for your Homepage
 
-![Latest Stable Version](https://img.shields.io/badge/release-v1.0.0-brightgreen.svg) ![License](https://img.shields.io/packagist/l/gomoob/php-pushwoosh.svg) [![Minimum PHP Version](https://img.shields.io/badge/php-%3E%3D%207.1-8892BF.svg)](https://php.net/)
+ ![Latest Stable Version](https://img.shields.io/badge/release-v1.1.0-brightgreen.svg)
+ ![License](https://img.shields.io/packagist/l/gomoob/php-pushwoosh.svg)
+ [![Minimum PHP Version](https://img.shields.io/badge/php-%3E%3D%207.4-8892BF.svg)](https://php.net/)
+ [![PHPStan](https://img.shields.io/badge/PHPStan-enabled-brightgreen.svg?style=flat)](https://phpstan.org/)
+ [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/Stefanius67/PNServer/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/Stefanius67/PNServer/?branch=master)
 ----------
 With this package, web push notifications can be created, encrypted and sent via HTTP request. The subscriptions can be saved and managed. Optionally, the package automatically deletes expired or no longer valid subscriptions.
 The JavaScript code required on the client side is also included in the package - this has to be slightly adapted to your own project.

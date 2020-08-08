@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace SKien\PNServer;
 
@@ -58,7 +58,7 @@ class PNEncryption
      * @param string $strSubscrAuth     subscription authenthication code
      * @param string $strEncoding       encoding (default: 'aesgcm')
      */
-    public function __construct(string $strSubscrKey, string $strSubscrAuth, string $strEncoding='aesgcm') 
+    public function __construct(string $strSubscrKey, string $strSubscrAuth, string $strEncoding = 'aesgcm') 
     {
         $this->strSubscrKey = self::decodeBase64URL($strSubscrKey);
         $this->strSubscrAuth = self::decodeBase64URL($strSubscrAuth);
@@ -150,7 +150,7 @@ class PNEncryption
      * @param array $aHeaders   existing headers to merge with
      * @return array
      */
-    public function getHeaders(?array $aHeaders=null) : array 
+    public function getHeaders(?array $aHeaders = null) : array 
     {
         if (!$aHeaders) {
             $aHeaders = array();
@@ -186,7 +186,7 @@ class PNEncryption
     {
         $bSucceeded = false;
         $keyResource = \openssl_pkey_new(['curve_name' => 'prime256v1', 'private_key_type' => OPENSSL_KEYTYPE_EC]);
-        if ($keyResource) {
+        if ($keyResource !== false) {
             $details = \openssl_pkey_get_details($keyResource);
             \openssl_pkey_free($keyResource);
         
@@ -331,7 +331,7 @@ class PNEncryption
      * @param int $iMaxLengthToPad
      * @return string
      */
-    private function padPayload(string $strPayload, int $iMaxLengthToPad=0) : string
+    private function padPayload(string $strPayload, int $iMaxLengthToPad = 0) : string
     {
         $iLen = mb_strlen($strPayload, '8bit');
         $iPad = $iMaxLengthToPad ? $iMaxLengthToPad - $iLen : 0;
@@ -370,6 +370,6 @@ class PNEncryption
         $prk = hash_hmac('sha256', $ikm, $salt, true);
     
         // expand
-        return mb_substr(hash_hmac('sha256', $info.chr(1), $prk, true), 0, $length, '8bit');
+        return mb_substr(hash_hmac('sha256', $info . chr(1), $prk, true), 0, $length, '8bit');
     }
 }
