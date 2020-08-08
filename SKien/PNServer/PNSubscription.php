@@ -36,7 +36,7 @@ class PNSubscription
      * @param string $strEndpoint
      * @param string $strPublicKey
      * @param string $strAuth
-     * @param number $timeExpiration
+     * @param int $timeExpiration
      * @param string $strEncoding
      */
     public function __construct(string $strEndpoint, string $strPublicKey, string $strAuth, int $timeExpiration=0, string $strEncoding='aesgcm') 

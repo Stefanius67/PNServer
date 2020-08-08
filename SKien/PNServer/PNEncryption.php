@@ -239,7 +239,7 @@ class PNEncryption
         if (!empty($this->strSubscrAuth)) {
             if ($this->strEncoding === "aesgcm") {
                 $info = 'Content-Encoding: auth' . chr(0);
-            } elseif ($this->strEncoding === "aes128gcm") {
+            } else {
                 $info = "WebPush: info" . chr(0) . $this->strSubscrKey . $this->strLocalPublicKey;
             }
             $strSharedSecret = self::hkdf($this->strSubscrAuth, $strSharedSecret, $info, 32);
@@ -280,8 +280,8 @@ class PNEncryption
      * {@link https://tools.ietf.org/html/draft-ietf-httpbis-encryption-encoding-00}
      * From {@link https://github.com/GoogleChrome/push-encryption-node/blob/master/src/encrypt.js}.
      *
-     * @param string $type The type of the info record
-     * @param string|null $context The context for the record
+     * @param string $strType The type of the info record
+     * @param string|null $strContext The context for the record
      * @return string
      * @throws \ErrorException
      */

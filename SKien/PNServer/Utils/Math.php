@@ -115,7 +115,8 @@ class Math
 
     public static function rightShift(\GMP $number, int $positions) : \GMP 
     {
-        return \gmp_div($number, \gmp_pow(\gmp_init(2, 10), $positions));
+        // when using \gmp_div, phpStan says: Method SKien\PNServer\Utils\Math::rightShift() should return GMP but returns resource. ?
+        return \gmp_div_q($number, \gmp_pow(\gmp_init(2, 10), $positions));
     }
     
     public static function modSub(\GMP $minuend, \GMP $subtrahend, \GMP $modulus) : \GMP
@@ -130,6 +131,6 @@ class Math
     
    	public static function modDiv(\GMP $dividend, \GMP $divisor, \GMP $modulus) : \GMP
    	{
-   		return self::mul($dividend, self::inverseMod($divisor, $modulus), $modulus);
+   		return self::mul($dividend, self::inverseMod($divisor, $modulus));
    	}
 }

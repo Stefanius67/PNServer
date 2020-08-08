@@ -53,9 +53,9 @@ trait PNServerHelper
      * invalid characters will be silently discarded.
      * @param string $data
      * @param boolean $strict
-     * @return string|boolean   
+     * @return string   
      */
-    public static function decodeBase64URL(string $data, bool $strict = false)
+    public static function decodeBase64URL(string $data, bool $strict = false) : string
     {
         // Convert Base64URL to Base64 by replacing “-” with “+” and “_” with “/”
         $b64 = strtr($data, '-_', '+/');

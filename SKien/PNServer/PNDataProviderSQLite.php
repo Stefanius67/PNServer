@@ -56,7 +56,7 @@ class PNDataProviderSQLite implements PNDataProvider
                 $this->strLastError .= 'readonly database file ' . $strDBName . '!';
             } else {
                 $this->db = new \SQLite3($strDBName);
-                if ($this->db && !$this->tableExist()) {
+                if (!$this->tableExist()) {
                     $this->createTable();
                 }
             }
@@ -157,7 +157,7 @@ class PNDataProviderSQLite implements PNDataProvider
     {
         $bSucceeded = false;
         $this->dbres = false;
-        $this->row = null;
+        $this->row = false;
         if ($this->isConnected()) {
             if ($bAutoRemove) {
                 // remove expired subscriptions from DB
@@ -205,7 +205,7 @@ class PNDataProviderSQLite implements PNDataProvider
     public function fetch()
     {
         $strSubJSON = false;
-        $this->row = null;
+        $this->row = false;
         if ($this->dbres !== false) {
             $this->row = $this->dbres->fetchArray(SQLITE3_ASSOC);
             $this->setSQLiteError($this->row !== false);
@@ -256,6 +256,7 @@ class PNDataProviderSQLite implements PNDataProvider
     private function tableExist() : bool 
     {
         if ($this->bTableExist === null) {
+            $this->bTableExist = false;
             if ($this->db) {
                 $this->bTableExist = ($this->db->querySingle("SELECT name FROM sqlite_master WHERE type='table' AND name='" . $this->strTableName . "'") != null);
             }

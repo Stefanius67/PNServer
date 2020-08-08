@@ -278,6 +278,7 @@ class PNDataProviderMySQL implements PNDataProvider
     private function tableExist() : bool 
     {
         if ($this->bTableExist === null) {
+            $this->bTableExist = false;
             if ($this->db) {
                 $dbres = $this->db->query("SHOW TABLES LIKE '" . $this->strTableName . "'");
                 $this->bTableExist = $dbres->num_rows > 0;
