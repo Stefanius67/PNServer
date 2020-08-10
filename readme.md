@@ -11,7 +11,6 @@ The JavaScript code required on the client side is also included in the package 
 
 **there are no dependencies to other external libraries!**
 
-PHP >= 7.1 is required to be able to generate the necessary encryption keys  - The curve_name configarg was added to openssl_pkey_new() in this version to make it possible to create EC keys!
 ## required PHP Libraries
 - cURL (curl)
 - Multibyte String (mbstring)
