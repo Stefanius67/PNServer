@@ -61,7 +61,7 @@ interface PNDataProvider
      * @param bool $bAutoRemove     automatic remove of expired subscriptions
      * @return bool true on success
      */
-    public function init(bool $bAutoRemove=true) : bool;
+    public function init(bool $bAutoRemove = true) : bool;
     
     /**
      * Get count of subscriptions.

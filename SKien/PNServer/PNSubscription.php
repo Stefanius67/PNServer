@@ -39,7 +39,7 @@ class PNSubscription
      * @param int $timeExpiration
      * @param string $strEncoding
      */
-    public function __construct(string $strEndpoint, string $strPublicKey, string $strAuth, int $timeExpiration=0, string $strEncoding = 'aesgcm') 
+    public function __construct(string $strEndpoint, string $strPublicKey, string $strAuth, int $timeExpiration = 0, string $strEncoding = 'aesgcm') 
     {
         $this->strEndpoint = $strEndpoint;
         $this->strPublicKey = $strPublicKey;

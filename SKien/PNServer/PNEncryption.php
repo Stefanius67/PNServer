@@ -190,7 +190,7 @@ class PNEncryption
             $details = \openssl_pkey_get_details($keyResource);
             \openssl_pkey_free($keyResource);
         
-            if ($details) {
+            if ($details !== false) {
                 $this->strLocalPublicKey  = '04';
                 $this->strLocalPublicKey .= str_pad(gmp_strval(gmp_init(bin2hex($details['ec']['x']), 16), 16), 64, '0', STR_PAD_LEFT);
                 $this->strLocalPublicKey .= str_pad(gmp_strval(gmp_init(bin2hex($details['ec']['y']), 16), 16), 64, '0', STR_PAD_LEFT);

@@ -208,7 +208,7 @@ class PNDataProviderSQLite implements PNDataProvider
         $this->row = false;
         if ($this->dbres !== false) {
             $this->row = $this->dbres->fetchArray(SQLITE3_ASSOC);
-            $this->setSQLiteError($this->row !== false);
+            $this->setSQLiteError(!is_bool($this->row));
             if ($this->row) {
                 $strSubJSON = $this->row[self::COL_SUBSCRIPTION];
             }

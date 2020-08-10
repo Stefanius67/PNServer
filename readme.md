@@ -2,7 +2,7 @@
 
  ![Latest Stable Version](https://img.shields.io/badge/release-v1.1.0-brightgreen.svg)
  ![License](https://img.shields.io/packagist/l/gomoob/php-pushwoosh.svg)
- [![Minimum PHP Version](https://img.shields.io/badge/php-%3E%3D%207.4-8892BF.svg)](https://php.net/)
+ [![Minimum PHP Version](https://img.shields.io/badge/php-%3E%3D%207.1-8892BF.svg)](https://php.net/)
  [![PHPStan](https://img.shields.io/badge/PHPStan-enabled-brightgreen.svg?style=flat)](https://phpstan.org/)
  [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/Stefanius67/PNServer/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/Stefanius67/PNServer/?branch=master)
 ----------
@@ -39,17 +39,16 @@ you can generate your own VAPID key on [https://tools.reactpwa.com/vapid](https:
 ## Usage
 A [tutorial](https://www.phpclasses.org/blog/package/11632/post/1-How-to-Use-PHP-to-Send-Web-Push-Notifications-for-Your-Web-Site-in-2020.html) describing the individual steps for using the package is available at [PHPclasses.org](https://www.phpclasses.org/blog/package/11632/post/1-How-to-Use-PHP-to-Send-Web-Push-Notifications-for-Your-Web-Site-in-2020.html). 
 
-*PnTestClient.html* shows a simple Page to subscribe the push notifications.
+*PnTestClient.html* shows a simple example Page to subscribe the push notifications.
 
 *PNTestServer.php* demonstrates, how the Notification Server can be implemented:
-insert your own VAPID key at following lines:
+
+rename *MyVapid.php.org* to *MyVapid.php* and set your own keys:
 ```php
-  // set the VAPID key
   $oVapid = new PNVapid(
-          "mailto:yourmail@yourdomain.de",
-          "insert your own VAPID public-key here",
-          "insert your own VAPID private-key here"
-      );
-  $oServer->setVapid($oVapid);
+      "mailto:yourmail@yourdomain.de",
+      "your-generated-public-key",
+      "your-generated-private-key"
+  );
 ```
 

@@ -168,7 +168,7 @@ class PNDataProviderMySQL implements PNDataProvider
                 $strSQL .= self::COL_EXPIRES . " IS NOT NULL AND ";
                 $strSQL .= self::COL_EXPIRES . " < NOW()";
             
-                $bSucceeded = $this->db->query($strSQL);
+                $bSucceeded = $this->db->query($strSQL) !== false;
                 if (!$bSucceeded) {
                     $this->strLastError = 'MySQL: ' . $this->db->error;
                 }

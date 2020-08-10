@@ -120,17 +120,17 @@ class Math
     }
     
     public static function modSub(\GMP $minuend, \GMP $subtrahend, \GMP $modulus) : \GMP
-   	{
-   	    return self::mod(self::sub($minuend, $subtrahend), $modulus);
-   	}
+    {
+        return self::mod(self::sub($minuend, $subtrahend), $modulus);
+    }
     
-   	public static function modMul(\GMP $multiplier, \GMP $muliplicand, \GMP $modulus) : \GMP
-   	{
-   	    return self::mod(self::mul($multiplier, $muliplicand), $modulus);
-   	}
+    public static function modMul(\GMP $multiplier, \GMP $muliplicand, \GMP $modulus) : \GMP
+    {
+        return self::mod(self::mul($multiplier, $muliplicand), $modulus);
+    }
     
-   	public static function modDiv(\GMP $dividend, \GMP $divisor, \GMP $modulus) : \GMP
-   	{
-   	    return self::mul($dividend, self::inverseMod($divisor, $modulus));
-   	}
+    public static function modDiv(\GMP $dividend, \GMP $divisor, \GMP $modulus) : \GMP
+    {
+        return self::mul($dividend, self::inverseMod($divisor, $modulus));
+    }
 }
