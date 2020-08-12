@@ -3,6 +3,9 @@ declare(strict_types=1);
 
 namespace SKien\PNServer;
 
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\NullLogger;
+
 /**
  * main class of the package to create push notifications.
  * 
@@ -17,6 +20,7 @@ namespace SKien\PNServer;
 */
 class PNServer
 {
+    use LoggerAwareTrait;
     use PNServerHelper;
     
     /** @var PNDataProvider dataprovider         */
@@ -52,6 +56,7 @@ class PNServer
     {
         $this->oDP = $oDP;
         $this->reset();
+        $this->logger = new NullLogger();
     }
     
     /**
@@ -111,6 +116,7 @@ class PNServer
         if ($oSubscription->isValid()) {
             $this->aSubscription[] = $oSubscription;
         }
+        $this->logger->info(__CLASS__ . ': ' . 'added {state} Subscription.', ['state' => $oSubscription->isValid() ? 'valid' : 'invalid']);
     }
     
     /**
@@ -144,11 +150,14 @@ class PNServer
                 }
                 // if $bAutoRemove is false, $this->iExpired may differs from $this->iAutoRemoved
                 $this->iExpired = $iBefore - count($this->aSubscription);
+                $this->logger->info(__CLASS__ . ': ' . 'added {count} Subscriptions from DB.', ['count' => count($this->aSubscription)]);
             } else {
                 $this->strError = $this->oDP->getError();
+                $this->logger->error(__CLASS__ . ': ' . $this->strError);
             }
         } else {
             $this->strError = 'missing dataprovider!';
+            $this->logger->error(__CLASS__ . ': ' . $this->strError);
         }
         return $bSucceeded;
     }
@@ -179,10 +188,13 @@ class PNServer
     {
         if (!$this->oVapid) {
             $this->strError = 'no VAPID-keys set!';
+            $this->logger->error(__CLASS__ . ': ' . $this->strError);
         } elseif (!$this->oVapid->isValid()) {
             $this->strError = 'VAPID error: ' . $this->oVapid->getError();
+            $this->logger->error(__CLASS__ . ': ' . $this->strError);
         } elseif (count($this->aSubscription) == 0) {
             $this->strError = 'no valid Subscriptions set!';
+            $this->logger->warning(__CLASS__ . ': ' . $this->strError);
         } else {
             // create multi requests...
             $mcurl = curl_multi_init();
@@ -265,6 +277,7 @@ class PNServer
                 }
             }
         }
+        $this->logger->info(__CLASS__ . ': ' . 'notifications pushed', $this->getSummary());
         return (strlen($this->strError) == 0);
     }
         

@@ -1,7 +1,7 @@
 <?php
 require_once 'autoloader.php';
 require_once 'MyVapid.php';
-require_once 'PNSendWelcome.php';
+require_once 'MyLogger.php';
 
 use SKien\PNServer\PNDataProviderSQLite;
 use SKien\PNServer\PNSubscription;
@@ -26,6 +26,9 @@ use SKien\PNServer\PNServer;
  * 
  * After the notification was pushed, a summary and/or a detailed log can be
  * retrieved from the server 
+ * 
+ * If you want to log several events or errors, you can pass any PSR-3 compliant 
+ * logger of your choice to the PNDataProvider- and PNServer-object.
  *
  * THIS CODE IS INTENDED ONLY AS EXAMPLE - DONT USE IT DIRECT IN YOU PROJECT
  *
@@ -51,7 +54,8 @@ if ($bExit) {
 }
 
 // for this test we use SQLite database
-$oDP = new PNDataProviderSQLite();
+$logger = createLogger();
+$oDP = new PNDataProviderSQLite(null, null, null, $logger);
 if (!$oDP->isConnected()) {
     echo $oDP->getError();
 	exit();
@@ -65,6 +69,7 @@ if (!$oDP->init()) {
 
 // the server to handle all
 $oServer = new PNServer($oDP);
+$oServer->setLogger($logger);
 
 // Set our VAPID keys
 $oServer->setVapid(getMyVapid());

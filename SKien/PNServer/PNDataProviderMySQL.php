@@ -3,6 +3,9 @@ declare(strict_types=1);
 
 namespace SKien\PNServer;
 
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
+
 /**
  * dataprovider for MySQL database
  * uses given Table in specified MySQL database
@@ -42,6 +45,8 @@ class PNDataProviderMySQL implements PNDataProvider
     protected string $strLastError = '';
     /** @var bool does table exist               */
     protected bool $bTableExist = false;
+    /** @var LoggerInterface $logger     */
+    protected LoggerInterface $logger;
     
     /**
      * @param string $strDBHost     DB Host
@@ -49,9 +54,11 @@ class PNDataProviderMySQL implements PNDataProvider
      * @param string $strDBPwd      DB Password
      * @param string $strDBName     DB Name
      * @param string $strTableName  tablename for the subscriptions - if null, self::TABLE_NAME is used and created if not exist
+     * @param LoggerInterface $logger
      */
-    public function __construct(string $strDBHost, string $strDBUser, string $strDBPwd, string $strDBName, ?string $strTableName = null) 
+    public function __construct(string $strDBHost, string $strDBUser, string $strDBPwd, string $strDBName, ?string $strTableName = null, ?LoggerInterface $logger = null)
     {
+        $this->logger = isset($logger) ? $logger : new NullLogger();
         $this->strDBHost = $strDBHost; 
         $this->strDBUser = $strDBUser; 
         $this->strDBPwd = $strDBPwd; 
@@ -65,6 +72,7 @@ class PNDataProviderMySQL implements PNDataProvider
             }
         } else {
             $this->strLastError = 'MySQL: Connect Error ' . mysqli_connect_errno();
+            $this->logger->error(__CLASS__ . ': ' . $this->strLastError);
         }
     }
 
@@ -78,6 +86,7 @@ class PNDataProviderMySQL implements PNDataProvider
             if (strlen($this->strLastError) == 0) {
                 $this->strLastError = 'no database connected!';
             }
+            $this->logger->error(__CLASS__ . ': ' . $this->strLastError);
         } else if (!$this->tableExist()) {
             // Condition cannot be forced to test
             // - can only occur during development using invalid SQL-statement for creation!
@@ -85,6 +94,7 @@ class PNDataProviderMySQL implements PNDataProvider
             if (strlen($this->strLastError) == 0) {
                 $this->strLastError = 'database table ' . $this->strTableName . ' not exist!';
             }
+            $this->logger->error(__CLASS__ . ': ' . $this->strLastError);
             // @codeCoverageIgnoreEnd
         }
         return ($this->db && $this->bTableExist);
@@ -122,8 +132,10 @@ class PNDataProviderMySQL implements PNDataProvider
                 
                 $bSucceeded = $this->db->query($strSQL) !== false;
                 $this->strLastError = $this->db->error;
+                $this->logger->info(__CLASS__ . ': ' . 'Subscription saved', strlen($this->strLastError) > 0 ? ['error' => $this->strLastError] : []);
             } else {
                 $this->strLastError = 'Error json_decode: ' . json_last_error_msg();
+                $this->logger->error(__CLASS__ . ': ' . $this->strLastError);
             }
         }
         return $bSucceeded;
@@ -142,6 +154,7 @@ class PNDataProviderMySQL implements PNDataProvider
         
             $bSucceeded = $this->db->query($strSQL) !== false;
             $this->strLastError = $this->db->error;
+            $this->logger->info(__CLASS__ . ': ' . 'Subscription removed', strlen($this->strLastError) > 0 ? ['error' => $this->strLastError] : []);
         }
         return $bSucceeded;
     }
@@ -171,6 +184,7 @@ class PNDataProviderMySQL implements PNDataProvider
                 $bSucceeded = $this->db->query($strSQL) !== false;
                 if (!$bSucceeded) {
                     $this->strLastError = 'MySQL: ' . $this->db->error;
+                    $this->logger->error(__CLASS__ . ': ' . $this->strLastError);
                 }
             } else {
                 // or just exclude them from query
@@ -194,6 +208,7 @@ class PNDataProviderMySQL implements PNDataProvider
                     // @codeCoverageIgnoreStart
                     // can only occur during development!
                     $this->strLastError = 'MySQL: ' . $this->db->error;
+                    $this->logger->error(__CLASS__ . ': ' . $this->strLastError);
                     $bSucceeded = false;
                     // @codeCoverageIgnoreEnd
                 }
@@ -242,6 +257,7 @@ class PNDataProviderMySQL implements PNDataProvider
         $bSucceeded = false;
         if ($this->isConnected()) {
             $bSucceeded = $this->db->query("TRUNCATE TABLE " . $this->strTableName);
+            $this->logger->info(__CLASS__ . ': ' . 'Subscription table truncated');
         }
         return $bSucceeded;
     }
@@ -306,8 +322,17 @@ class PNDataProviderMySQL implements PNDataProvider
                 
             $bSucceeded = $this->db->query($strSQL) !== false;
             $this->strLastError = $this->db->error;
+            $this->logger->info(__CLASS__ . ': ' . 'Subscription table created', strlen($this->strLastError) > 0 ? ['error' => $this->strLastError] : []);
         }
         $this->bTableExist = $bSucceeded; 
         return $bSucceeded;
+    }
+    
+    /**
+     * @param LoggerInterface $logger
+     */
+    public function setLogger(LoggerInterface $logger) : void
+    {
+        $this->logger = $logger;
     }
 }

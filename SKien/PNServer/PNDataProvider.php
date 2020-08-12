@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace SKien\PNServer;
 
+use Psr\Log\LoggerInterface;
+
 /**
  * Interface for dataproviders.
  * 
@@ -93,4 +95,9 @@ interface PNDataProvider
      * @return string
      */
     public function getError() : string;
+    
+    /**
+     * @param LoggerInterface $logger
+     */
+    public function setLogger(LoggerInterface $logger) : void;
 }

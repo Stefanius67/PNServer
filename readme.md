@@ -2,7 +2,7 @@
 
  ![Latest Stable Version](https://img.shields.io/badge/release-v1.1.0-brightgreen.svg)
  ![License](https://img.shields.io/packagist/l/gomoob/php-pushwoosh.svg)
- [![Minimum PHP Version](https://img.shields.io/badge/php-%3E%3D%207.1-8892BF.svg)](https://php.net/)
+ [![Minimum PHP Version](https://img.shields.io/badge/php-%3E%3D%207.4-8892BF.svg)](https://php.net/)
  [![PHPStan](https://img.shields.io/badge/PHPStan-enabled-brightgreen.svg?style=flat)](https://phpstan.org/)
  [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/Stefanius67/PNServer/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/Stefanius67/PNServer/?branch=master)
 ----------
@@ -50,4 +50,23 @@ rename *MyVapid.php.org* to *MyVapid.php* and set your own keys:
       "your-generated-private-key"
   );
 ```
+
+## Logging
+This package can use any PSR-3 compliant logger. The logger is initialized with a NullLogger-object 
+by default. The logger of your choice have to be passed to the constructor of the PNDataProvider 
+and set via setLogger() method to the PNServer.
+
+If you are not working with a PSR-3 compatible logger so far, this is a good opportunity 
+to deal with this recommendation and may work with it in the future.  
+
+There are several more or less extensive PSR-3 packages available on the Internet.  
+
+You can also take a look at the 
+ [**'XLogger'**](https://www.phpclasses.org/package/11743-PHP-Log-events-to-browser-console-text-and-XML-files.html)
+package and the associated blog
+ [**'PSR-3 logging in a PHP application'**](https://www.phpclasses.org/blog/package/11743/post/1-PSR3-logging-in-a-PHP-application.html)
+as an introduction to this topic.
+
+
+
 

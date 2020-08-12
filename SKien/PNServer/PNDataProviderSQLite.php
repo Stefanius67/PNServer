@@ -3,6 +3,9 @@ declare(strict_types=1);
 
 namespace SKien\PNServer;
 
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
+
 /**
  * dataprovider for SqLite database
  * uses given Table in specified SqLite database
@@ -36,14 +39,18 @@ class PNDataProviderSQLite implements PNDataProvider
     protected string $strLastError;
     /** @var bool does table exist               */
     protected bool $bTableExist = false;
+    /** @var LoggerInterface $logger     */
+    protected LoggerInterface $logger;
     
     /**
      * @param string $strDir        directory -  if null, current working directory assumed
      * @param string $strDBName     name of DB file - if null, file 'pnsub.sqlite' is used and created if not exist
      * @param string $strTableName  tablename for the subscriptions - if null, self::TABLE_NAME is used and created if not exist
+     * @param LoggerInterface $logger
      */
-    public function __construct(?string $strDir = null, ?string $strDBName = null, ?string $strTableName = null) 
+    public function __construct(?string $strDir = null, ?string $strDBName = null, ?string $strTableName = null, ?LoggerInterface $logger = null) 
     {
+        $this->logger = isset($logger) ? $logger : new NullLogger();
         $this->strTableName = isset($strTableName) ? $strTableName : self::TABLE_NAME;
         $this->strDBName = isset($strDBName) ? $strDBName : 'pnsub.sqlite';
         $this->strLastError = ''; 
@@ -54,6 +61,7 @@ class PNDataProviderSQLite implements PNDataProvider
         try {
             if (file_exists($strDBName) && !is_writable($strDBName)) {
                 $this->strLastError .= 'readonly database file ' . $strDBName . '!';
+                $this->logger->error(__CLASS__ . ': ' . $this->strLastError);
             } else {
                 $this->db = new \SQLite3($strDBName);
                 if (!$this->tableExist()) {
@@ -69,6 +77,7 @@ class PNDataProviderSQLite implements PNDataProvider
                     $this->strLastError .= ' (no rights to write on directory ' . $strDir . ')';
                 }
             }
+            $this->logger->error(__CLASS__ . ': ' . $this->strLastError);
         }
     }
 
@@ -82,6 +91,7 @@ class PNDataProviderSQLite implements PNDataProvider
             if (strlen($this->strLastError) == 0) {
                 $this->strLastError = 'no database connected!';
             }
+            $this->logger->error(__CLASS__ . ': ' . $this->strLastError);
         } else if (!$this->tableExist()) {
             // Condition cannot be forced to test
             // - can only occur during development using invalid SQL-statement for creation!
@@ -89,6 +99,7 @@ class PNDataProviderSQLite implements PNDataProvider
             if (strlen($this->strLastError) == 0) {
                 $this->strLastError = 'database table ' . $this->strTableName . ' not exist!';
             }
+            $this->logger->error(__CLASS__ . ': ' . $this->strLastError);
             // @codeCoverageIgnoreEnd
         }
         return ($this->db && $this->bTableExist);
@@ -124,8 +135,10 @@ class PNDataProviderSQLite implements PNDataProvider
 
                 $bSucceeded = $this->db->exec($strSQL);
                 $this->setSQLiteError($bSucceeded);
+                $this->logger->info(__CLASS__ . ': ' . 'Subscription saved', strlen($this->strLastError) > 0 ? ['error' => $this->strLastError] : []);
             } else {
                 $this->strLastError = 'Error json_decode: ' . json_last_error_msg();
+                $this->logger->error(__CLASS__ . ': ' . $this->strLastError);
             }
         }
         return $bSucceeded;
@@ -144,6 +157,7 @@ class PNDataProviderSQLite implements PNDataProvider
         
             $bSucceeded = $this->db->exec($strSQL);
             $this->setSQLiteError($bSucceeded);
+            $this->logger->info(__CLASS__ . ': ' . 'Subscription removed', strlen($this->strLastError) > 0 ? ['error' => $this->strLastError] : []);
         }
         return $bSucceeded;
     }
@@ -225,6 +239,7 @@ class PNDataProviderSQLite implements PNDataProvider
         $bSucceeded = false;
         if ($this->isConnected()) {
             $bSucceeded = $this->db->exec("DELETE FROM " . $this->strTableName);
+            $this->logger->info(__CLASS__ . ': ' . 'Subscription table truncated');
         }
         return $bSucceeded;
     }
@@ -280,6 +295,8 @@ class PNDataProviderSQLite implements PNDataProvider
             $strSQL .= ");";
                 
             $bSucceeded = $this->db->exec($strSQL);
+            $this->setSQLiteError($bSucceeded);
+            $this->logger->info(__CLASS__ . ': ' . 'Subscription table created', strlen($this->strLastError) > 0 ? ['error' => $this->strLastError] : []);
         }
         $this->bTableExist = $bSucceeded;
         return $bSucceeded;
@@ -298,5 +315,13 @@ class PNDataProviderSQLite implements PNDataProvider
             $this->strLastError = 'SQLite3: ' . $this->db->lastErrorMsg();
         }
         // @codeCoverageIgnoreEnd
+    }
+    
+    /**
+     * @param LoggerInterface $logger
+     */
+    public function setLogger(LoggerInterface $logger) : void
+    {
+        $this->logger = $logger;
     }
 }

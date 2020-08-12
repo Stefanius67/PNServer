@@ -3,3 +3,5 @@ parameters:
 	checkMissingIterableValueType: false
 	paths:
 		- SKien/PNServer
+	scanDirectories:
+		- Psr/Log

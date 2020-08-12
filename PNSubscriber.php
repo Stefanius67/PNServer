@@ -1,6 +1,7 @@
 <?php
 require_once 'autoloader.php';
 require_once 'PNSendWelcome.php';
+require_once 'MyLogger.php';
 
 use SKien\PNServer\PNDataProviderSQLite;
 use SKien\PNServer\PNSubscription;
@@ -20,6 +21,9 @@ use SKien\PNServer\PNSubscription;
  * Set $bSendWelcome=true, to send a welcome notification to each user 
  * newly subscribed our service, after the subscription was saved in 
  * the database.
+ * 
+ * If you want to log several events or errors, you can pass any PSR-3 compliant 
+ * logger of your choice to the dataprovider.
  *
  * THIS CODE IS INTENDED ONLY AS EXAMPLE - DONT USE IT DIRECT IN YOU PROJECT
  *
@@ -38,7 +42,8 @@ if (strtolower($_SERVER['REQUEST_METHOD']) == 'post') {
 		if (($strJSON = trim(file_get_contents('php://input'))) === false) {
 			$result['msg'] = 'invalid JSON data!';
 		} else {
-			$oDP = new PNDataProviderSQLite();
+		    // create any PSR-3 logger of your choice in MyLogger.php
+			$oDP = new PNDataProviderSQLite(null, null, null, createLogger());
 			if ($oDP->saveSubscription($strJSON) !== false) {
 				$result['msg'] = 'subscription saved on server!';
 				if ($bSendWelcome) {
