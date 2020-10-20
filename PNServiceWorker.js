@@ -110,7 +110,13 @@ async function pnSaveSubscription(sub) {
           };
     // we're using fetch() to post the data to the server
     var response = await fetch(strSubscriberURL, fetchdata);
-    return response.json();
+	// activate following two lines, if any PHP-Error in the subscriber script occurs
+	// -> in that case, response won't contain valid JSON data!
+	/*
+	var cloned = response.clone();
+	console.log('Response: ', await cloned.text());
+	*/
+	return await response.json();
 }
 
 /**
