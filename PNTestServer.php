@@ -39,7 +39,7 @@ use SKien\PNServer\PNServer;
 // check, if PHP version is sufficient and all required extensions are installed
 $bExit = false;
 if (version_compare(phpversion(), '7.4', '<')) {
-	trigger_error('At least PHP Version 7.1 is required (current Version is ' . phpversion() . ')!', E_USER_WARNING);
+	trigger_error('At least PHP Version 7.4 is required (current Version is ' . phpversion() . ')!', E_USER_WARNING);
 	$bExit = true;
 }
 $aExt = array('curl', 'gmp', 'mbstring', 'openssl', 'bcmath');
