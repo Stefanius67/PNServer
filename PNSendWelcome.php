@@ -32,11 +32,8 @@ function sendWelcome(PNSubscription $oSubscription)
     // create payload message for welcome...
     $oPayload = new PNPayload('Welcome to PNServer', 'We warmly welcome you to our homepage.', './elephpant.png');
     
-    // set VAPID, payload and the passed subscription
+    // set VAPID, payload and push to the passed subscription
     $oServer->setVapid(getMyVapid());
     $oServer->setPayload($oPayload);
-    $oServer->addSubscription($oSubscription);
-    
-    // ... and finally push the notification!
-    $oServer->push();
+    $oServer->pushSingle($oSubscription);
 }

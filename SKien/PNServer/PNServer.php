@@ -247,21 +247,27 @@ class PNServer
                     // now performing multi request...
                     $iRunning = null;
                     do {
-                        curl_multi_exec($mcurl, $iRunning);
-                    } while ($iRunning);
-    
-                    // ...and get response of each request
-                    foreach ($aRequests as $strEndPoint => $curl) {
-                        $aLog = array();
-                        $iRescode = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
+                        $iMState = curl_multi_exec($mcurl, $iRunning);
+                    } while ($iRunning && $iMState == CURLM_OK);
+                    
+                    if ($iMState == CURLM_OK) {
+                        // ...and get response of each request
+                        foreach ($aRequests as $strEndPoint => $curl) {
+                            $aLog = array();
+                            $iRescode = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
+                            
+                            $aLog['msg'] = $this->getPushServiceResponseText($iRescode);
+                            $aLog['curl_response'] = curl_multi_getcontent($curl);
+                            $aLog['curl_response_code'] = $iRescode;
+                            $this->aLog[$strEndPoint] = $aLog;
+                            // remove handle from multi and close
+                            curl_multi_remove_handle($mcurl, $curl);
+                            curl_close($curl);
+                        }
                         
-                        $aLog['msg'] = $this->getPushServiceResponseText($iRescode);
-                        $aLog['curl_response'] = curl_multi_getcontent($curl);
-                        $aLog['curl_response_code'] = $iRescode;
-                        $this->aLog[$strEndPoint] = $aLog;
-                        // remove handle from multi and close
-                        curl_multi_remove_handle($mcurl, $curl);
-                        curl_close($curl);
+                    } else {
+                        $this->strError = 'curl_multi_exec() Erroro: ' . curl_multi_strerror($iMState);
+                        $this->logger->error(__CLASS__ . ': ' . $this->strError);
                     }
                     // ... close the door
                     curl_multi_close($mcurl);
@@ -280,7 +286,68 @@ class PNServer
         $this->logger->info(__CLASS__ . ': ' . 'notifications pushed', $this->getSummary());
         return (strlen($this->strError) == 0);
     }
-        
+
+    /**
+     * Push one single subscription.
+     * @param PNSubscription $oSub
+     * @return bool
+     */
+    public function pushSingle(PNSubscription $oSub) : bool
+    {
+        if (!$this->oVapid) {
+            $this->strError = 'no VAPID-keys set!';
+            $this->logger->error(__CLASS__ . ': ' . $this->strError);
+        } elseif (!$this->oVapid->isValid()) {
+            $this->strError = 'VAPID error: ' . $this->oVapid->getError();
+            $this->logger->error(__CLASS__ . ': ' . $this->strError);
+        } else {
+            $aLog = ['msg' => '', 'curl_response' => '', 'curl_response_code' => -1];
+            // payload must be encrypted every time although it does not change, since
+            // each subscription has at least his public key and authentication token of its own ...
+            $oEncrypt = new PNEncryption($oSub->getPublicKey(), $oSub->getAuth(), $oSub->getEncoding());
+            if (($strContent = $oEncrypt->encrypt($this->strPayload)) !== false) {
+                // merge headers from encryption and VAPID (maybe both containing 'Crypto-Key')
+                if (($aVapidHeaders = $this->oVapid->getHeaders($oSub->getEndpoint())) !== false) {
+                    $aHeaders = $oEncrypt->getHeaders($aVapidHeaders);
+                    $aHeaders['Content-Length'] = mb_strlen($strContent, '8bit');
+                    $aHeaders['TTL'] = 2419200;
+                    
+                    // build Http - Headers
+                    $aHttpHeader = array();
+                    foreach ($aHeaders as $strName => $strValue) {
+                        $aHttpHeader[] = $strName . ': ' . $strValue;
+                    }
+                    
+                    // and send request with curl
+                    $curl = curl_init($oSub->getEndpoint());
+                    
+                    if ($curl !== false) {
+                        curl_setopt($curl, CURLOPT_POST, true);
+                        curl_setopt($curl, CURLOPT_POSTFIELDS, $strContent);
+                        curl_setopt($curl, CURLOPT_HTTPHEADER, $aHttpHeader);
+                        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+                        
+                        if (($strResponse = curl_exec($curl)) !== false) {
+                            $iRescode = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
+                            
+                            $aLog['msg'] = $this->getPushServiceResponseText($iRescode);
+                            $aLog['curl_response'] = $strResponse;
+                            $aLog['curl_response_code'] = $iRescode;
+                            curl_close($curl);
+                        }
+                    }
+                } else {
+                    $aLog['msg'] = 'VAPID error: ' . $this->oVapid->getError();
+                }
+            } else {
+                $aLog['msg'] = 'Payload encryption error: ' . $oEncrypt->getError();
+            }
+            $this->aLog[$oSub->getEndpoint()] = $aLog;
+        }
+        $this->logger->info(__CLASS__ . ': ' . 'single notifications pushed.');
+        return (strlen($this->strError) == 0);
+    }
+    
     /**
      * @return array
      */
