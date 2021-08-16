@@ -10,7 +10,11 @@
 With this package, web push notifications can be created, encrypted and sent via HTTP request. The subscriptions can be saved and managed. Optionally, the package automatically deletes expired or no longer valid subscriptions.
 The JavaScript code required on the client side is also included in the package - this has to be slightly adapted to your own project.
 
-**there are no dependencies to other external libraries!**
+> **Important:**
+>
+> The client side of this package works with the Javascript Notification API, which is only available in a secure context (HTTPS). Thus, the complete package also depends on running in a secure context (also in the test environment - unless both the server and the client run on the ***'localhost'***).
+>
+> [Here you can read more about how to set up a secure context in the local development environment](https://github.com/Stefanius67/PNServer/wiki/Create-trusted-certificates-for-development-in-secure-context-on-a-local-network). 
 
 ## required PHP Libraries
 - cURL (curl)
@@ -18,6 +22,8 @@ The JavaScript code required on the client side is also included in the package 
 - OpenSSL (openssl)
 - GNU Multiple Precision (gmp)
 - BC Math (bcmath)
+
+**there are no dependencies to other external libraries!**
 
 ## Installation   
 You can download the  Latest [release version ](https://www.phpclasses.org/package/11632-PHP-Queue-and-push-notifications-to-Web-users.html) from PHPClasses.org
