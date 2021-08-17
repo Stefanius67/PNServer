@@ -40,7 +40,11 @@ required adaptions for your own project (in *PNServiceworker.js*):
   const strDefIcon        = './elephpant.png';
 ```
 
-you can generate your own VAPID key on [https://tools.reactpwa.com/vapid](https://tools.reactpwa.com/vapid).
+There are several websites where you can generate your own VAPID key. E.g.:
+
+- [https://www.stephane-quantin.com/en/tools/generators/vapid-keys](https://www.stephane-quantin.com/en/tools/generators/vapid-keys).
+- [https://tools.reactpwa.com/vapid](https://tools.reactpwa.com/vapid).
+
 
 ## Usage
 A [tutorial](https://www.phpclasses.org/blog/package/11632/post/1-How-to-Use-PHP-to-Send-Web-Push-Notifications-for-Your-Web-Site-in-2020.html) describing the individual steps for using the package is available at [PHPclasses.org](https://www.phpclasses.org/blog/package/11632/post/1-How-to-Use-PHP-to-Send-Web-Push-Notifications-for-Your-Web-Site-in-2020.html). 
