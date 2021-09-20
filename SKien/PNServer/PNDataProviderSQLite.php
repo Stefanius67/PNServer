@@ -83,9 +83,6 @@ class PNDataProviderSQLite implements PNDataProvider
     public function isConnected() : bool
     {
         if (!$this->db) {
-            if (strlen($this->strLastError) == 0) {
-                $this->strLastError = 'no database connected!';
-            }
             $this->logger->error(__CLASS__ . ': ' . $this->strLastError);
         } else if (!$this->tableExist()) {
             // Condition cannot be forced to test

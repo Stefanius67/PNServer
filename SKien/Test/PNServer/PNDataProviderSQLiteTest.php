@@ -4,24 +4,25 @@ declare(strict_types=1);
 namespace SKien\Test\PNServer;
 
 use SKien\PNServer\PNDataProviderSQLite;
+use SKien\XLogger\FileLogger;
 
 /**
  * Fixture for the whole test.
- * - create temp directory for datafile if not exist 
+ * - create temp directory for datafile if not exist
  * - and ensure it is writeable
  * both will be done in self::getTempDataDir
  * - start without existing DB (delete DB file if exists so far)
- * 
- * Clean-Up 
- * - delete created DB-file after last test 
- * 
+ *
+ * Clean-Up
+ * - delete created DB-file after last test
+ *
  * @author Stefanius <s.kien@online.de>
  * @copyright MIT License - see the LICENSE file for details
  */
 class PNDataProviderSQLiteTest extends PNDataProviderTest
 {
     use TestHelperTrait;
-    
+
     protected $strTmpDir;
     protected $strFullPath;
 
@@ -31,7 +32,7 @@ class PNDataProviderSQLiteTest extends PNDataProviderTest
         self::getTempDataDir();
         self::deleteTempDataFile();
     }
-    
+
     public static function tearDownAfterClass() : void
     {
         self::deleteTempDataFile();
@@ -44,7 +45,7 @@ class PNDataProviderSQLiteTest extends PNDataProviderTest
         $this->strFullPath = $this->strTmpDir . DIRECTORY_SEPARATOR . self::$strSQLiteDBFilename;
         $this->dp = new PNDataProviderSQLite($this->strTmpDir, self::$strSQLiteDBFilename);
     }
-    
+
     public function test_constructError1() : void
     {
         // test for invalid directory
@@ -54,7 +55,7 @@ class PNDataProviderSQLiteTest extends PNDataProviderTest
         $this->assertFalse($dp->isConnected());
         $this->assertNotEmpty($dp->getError());
     }
-    
+
     public function test_constructError2() : void
     {
         // test for readonly directory
@@ -65,7 +66,7 @@ class PNDataProviderSQLiteTest extends PNDataProviderTest
         $this->assertNotEmpty($dp->getError());
         chmod($this->strTmpDir, 0777);
     }
-    
+
     public function test_constructError3() : void
     {
         // test for readonly db-file
@@ -76,6 +77,21 @@ class PNDataProviderSQLiteTest extends PNDataProviderTest
         $this->assertFalse($dp->isConnected());
         $strExpected = 'readonly database file ' . $this->strFullPath . '!';
         $this->assertEquals($strExpected, $dp->getError());
+        chmod($this->strFullPath, 0777);
+    }
+
+    public function test_errorWithLogger() : void
+    {
+        $oLogger = new FileLogger();
+        $oLogger->setFullpath($this->strTmpDir . DIRECTORY_SEPARATOR . 'testlog.csv');
+        $oLogger->reset();
+
+        // test for readonly db-file
+        chmod($this->strFullPath, 0444);
+        // for this test we need to create local instance AFTER set the DB-file to readonly ...
+        $dp = new PNDataProviderSQLite($this->strTmpDir, self::$strSQLiteDBFilename);
+        $dp->setLogger($oLogger);
+        $this->assertIsObject($dp);
         chmod($this->strFullPath, 0777);
     }
 }

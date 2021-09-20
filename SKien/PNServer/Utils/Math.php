@@ -131,11 +131,11 @@ class Math
 
     public static function modDiv(\GMP $dividend, \GMP $divisor, \GMP $modulus) : \GMP
     {
+        $moddiv = gmp_init(0);
         $invmod = self::inverseMod($divisor, $modulus);
         if ($invmod !== false) {
-            return self::mul($dividend, $invmod);
-        } else {
-            return gmp_init(0);
+            $moddiv = self::mul($dividend, $invmod);
         }
+        return $moddiv;
     }
 }
