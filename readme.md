@@ -6,6 +6,7 @@
  ![Minimum PHP Version](https://img.shields.io/badge/php-%3E%3D%207.4-8892BF.svg)
  [![PHPStan](https://img.shields.io/badge/PHPStan-enabled-brightgreen.svg?style=flat)](https://phpstan.org/)
  [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/Stefanius67/PNServer/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/Stefanius67/PNServer/?branch=master)
+ [![codecov](https://codecov.io/gh/Stefanius67/PNServer/branch/master/graph/badge.svg?token=OPM76QIKWG)](https://codecov.io/gh/Stefanius67/PNServer)
  
 ----------
 With this package, web push notifications can be created, encrypted and sent via HTTP request. The subscriptions can be saved and managed. Optionally, the package automatically deletes expired or no longer valid subscriptions.
