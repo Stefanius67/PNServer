@@ -7,23 +7,18 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
 /**
- * dataprovider for MySQL database
+ * Dataprovider for MySQL database.
  * uses given Table in specified MySQL database
- * 
- * if not specified in constructor, default table self::TABLE_NAME in 
- * MySQL database is used. 
+ *
+ * if not specified in constructor, default table self::TABLE_NAME in
+ * MySQL database is used.
  * table will be created if not exist so far.
- * 
- * #### History
- * - *2020-04-02*   initial version
- * - *2020-08-03*   PHP 7.4 type hint
- * 
- * @package SKien/PNServer
- * @version 1.1.0
- * @author Stefanius <s.kien@online.de>
+ *
+ * @package PNServer
+ * @author Stefanius <s.kientzler@online.de>
  * @copyright MIT License - see the LICENSE file for details
 */
-class PNDataProviderMySQL implements PNDataProvider 
+class PNDataProviderMySQL implements PNDataProvider
 {
     /** @var string tablename            */
     protected string $strTableName = '';
@@ -35,11 +30,11 @@ class PNDataProviderMySQL implements PNDataProvider
     protected string $strDBPwd = '';
     /** @var string DB name  */
     protected string $strDBName = '';
-    /** @var \mysqli|bool internal MySQL DB  (No type hint, as \mysqli or bool is possible type)  */
+    /** @var \mysqli|false|null internal MySQL DB */
     protected $db = false;
-    /** @var \mysqli_result|bool result of DB queries  (No type hint, as \mysqli_result or bool is possible type) */
+    /** @var \mysqli_result<string,mixed>|false result of DB queries */
     protected $dbres = false;
-    /** @var array last fetched row or null      */
+    /** @var array<string,mixed> last fetched row or null      */
     protected ?array $row = null;
     /** @var string last error                   */
     protected string $strLastError = '';
@@ -47,7 +42,7 @@ class PNDataProviderMySQL implements PNDataProvider
     protected bool $bTableExist = false;
     /** @var LoggerInterface $logger     */
     protected LoggerInterface $logger;
-    
+
     /**
      * @param string $strDBHost     DB Host
      * @param string $strDBUser     DB User
@@ -59,12 +54,12 @@ class PNDataProviderMySQL implements PNDataProvider
     public function __construct(string $strDBHost, string $strDBUser, string $strDBPwd, string $strDBName, ?string $strTableName = null, ?LoggerInterface $logger = null)
     {
         $this->logger = isset($logger) ? $logger : new NullLogger();
-        $this->strDBHost = $strDBHost; 
-        $this->strDBUser = $strDBUser; 
-        $this->strDBPwd = $strDBPwd; 
-        $this->strDBName = $strDBName; 
+        $this->strDBHost = $strDBHost;
+        $this->strDBUser = $strDBUser;
+        $this->strDBPwd = $strDBPwd;
+        $this->strDBName = $strDBName;
         $this->strTableName = isset($strTableName) ? $strTableName : self::TABLE_NAME;
-        
+
         $this->db = @mysqli_connect($strDBHost, $strDBUser, $strDBPwd, $strDBName);
         if ($this->db !== false) {
             if (!$this->tableExist()) {
@@ -80,7 +75,7 @@ class PNDataProviderMySQL implements PNDataProvider
      * {@inheritDoc}
      * @see PNDataProvider::isConnected()
      */
-    public function isConnected() : bool 
+    public function isConnected() : bool
     {
         if (!$this->db) {
             if (strlen($this->strLastError) == 0) {
@@ -99,12 +94,12 @@ class PNDataProviderMySQL implements PNDataProvider
         }
         return ($this->db && $this->bTableExist);
     }
-    
+
     /**
      * {@inheritDoc}
      * @see PNDataProvider::saveSubscription()
      */
-    public function saveSubscription(string $strJSON) : bool 
+    public function saveSubscription(string $strJSON) : bool
     {
         $bSucceeded = false;
         if ($this->db) {
@@ -113,7 +108,7 @@ class PNDataProviderMySQL implements PNDataProvider
                 $iExpires = isset($oSubscription['expirationTime']) ? intval(bcdiv($oSubscription['expirationTime'], '1000')) : 0;
                 $tsExpires = $iExpires > 0 ? date("'Y-m-d H:i:s'", $iExpires) : 'NULL';
                 $strUserAgent = isset($oSubscription['userAgent']) ? $oSubscription['userAgent'] : 'unknown UserAgent';
-                                
+
                 $strSQL  = "INSERT INTO " . $this->strTableName . " (";
                 $strSQL .= self::COL_ENDPOINT;
                 $strSQL .= "," . self::COL_EXPIRES;
@@ -129,7 +124,7 @@ class PNDataProviderMySQL implements PNDataProvider
                 $strSQL .= " expires = " . $tsExpires;
                 $strSQL .= ",subscription = '" . $strJSON . "'";
                 $strSQL .= ";";
-                
+
                 $bSucceeded = $this->db->query($strSQL) !== false;
                 $this->strLastError = $this->db->error;
                 $this->logger->info(__CLASS__ . ': ' . 'Subscription saved', strlen($this->strLastError) > 0 ? ['error' => $this->strLastError] : []);
@@ -140,35 +135,35 @@ class PNDataProviderMySQL implements PNDataProvider
         }
         return $bSucceeded;
     }
-    
+
     /**
      * {@inheritDoc}
      * @see PNDataProvider::removeSubscription()
      */
-    public function removeSubscription(string $strEndpoint) : bool 
+    public function removeSubscription(string $strEndpoint) : bool
     {
         $bSucceeded = false;
         if ($this->db) {
             $strSQL  = "DELETE FROM " . $this->strTableName . " WHERE endpoint LIKE ";
             $strSQL .= "'" . $strEndpoint . "'";
-        
+
             $bSucceeded = $this->db->query($strSQL) !== false;
             $this->strLastError = $this->db->error;
             $this->logger->info(__CLASS__ . ': ' . 'Subscription removed', strlen($this->strLastError) > 0 ? ['error' => $this->strLastError] : []);
         }
         return $bSucceeded;
     }
-    
+
     /**
      * Select all subscriptions not expired so far.
-     * columns expired and lastupdated are timestamp for better handling and visualization 
-     * e.g. in phpMyAdmin. For compatibility reasons with other dataproviders the query 
-     * selects the unis_timestamp values  
-     * 
+     * columns expired and lastupdated are timestamp for better handling and visualization
+     * e.g. in phpMyAdmin. For compatibility reasons with other dataproviders the query
+     * selects the unis_timestamp values
+     *
      * {@inheritDoc}
      * @see PNDataProvider::init()
      */
-    public function init(bool $bAutoRemove = true) : bool 
+    public function init(bool $bAutoRemove = true) : bool
     {
         $bSucceeded = false;
         $this->dbres = false;
@@ -180,7 +175,7 @@ class PNDataProviderMySQL implements PNDataProvider
                 $strSQL = "DELETE FROM " . $this->strTableName . " WHERE ";
                 $strSQL .= self::COL_EXPIRES . " IS NOT NULL AND ";
                 $strSQL .= self::COL_EXPIRES . " < NOW()";
-            
+
                 $bSucceeded = $this->db->query($strSQL) !== false;
                 if (!$bSucceeded) {
                     $this->strLastError = 'MySQL: ' . $this->db->error;
@@ -202,15 +197,17 @@ class PNDataProviderMySQL implements PNDataProvider
                 $strSQL .= "," . self::COL_USERAGENT;
                 $strSQL .= ",UNIX_TIMESTAMP(" . self::COL_LASTUPDATED . ") AS " . self::COL_LASTUPDATED;
                 $strSQL .= " FROM " . $this->strTableName . $strWhere;
-    
-                $this->dbres = $this->db->query($strSQL);
-                if ($this->dbres === false) {
+
+                $dbres = $this->db->query($strSQL);
+                if ($dbres === false) {
                     // @codeCoverageIgnoreStart
                     // can only occur during development!
                     $this->strLastError = 'MySQL: ' . $this->db->error;
                     $this->logger->error(__CLASS__ . ': ' . $this->strLastError);
                     $bSucceeded = false;
                     // @codeCoverageIgnoreEnd
+                } elseif (is_object($dbres)) {
+                    $this->dbres = $dbres;
                 }
             }
         }
@@ -221,22 +218,26 @@ class PNDataProviderMySQL implements PNDataProvider
      * {@inheritDoc}
      * @see PNDataProvider::count()
      */
-    public function count() : int 
+    public function count() : int
     {
         $iCount = 0;
         if ($this->db) {
             $dbres = $this->db->query("SELECT count(*) AS iCount FROM " . $this->strTableName);
-            $row = $dbres->fetch_array(MYSQLI_ASSOC);
-            $iCount = intval($row['iCount']);
+            if (is_object($dbres)) {
+                $row = $dbres->fetch_array(MYSQLI_ASSOC);
+                if ($row !== null) {
+                    $iCount = intval($row['iCount']);
+                }
+            }
         }
         return $iCount;
     }
-    
+
     /**
      * {@inheritDoc}
      * @see PNDataProvider::fetch()
      */
-    public function fetch() 
+    public function fetch()
     {
         $strSubJSON = false;
         if ($this->dbres !== false) {
@@ -247,7 +248,7 @@ class PNDataProviderMySQL implements PNDataProvider
         }
         return $strSubJSON;
     }
-    
+
     /**
      * {@inheritDoc}
      * @see PNDataProvider::truncate()
@@ -256,26 +257,26 @@ class PNDataProviderMySQL implements PNDataProvider
     {
         $bSucceeded = false;
         if ($this->isConnected()) {
-            $bSucceeded = $this->db->query("TRUNCATE TABLE " . $this->strTableName);
+            $bSucceeded = $this->db->query("TRUNCATE TABLE " . $this->strTableName); // @phpstan-ignore-line
             $this->logger->info(__CLASS__ . ': ' . 'Subscription table truncated');
         }
-        return $bSucceeded;
+        return $bSucceeded !== false;
     }
-    
+
     /**
      * {@inheritDoc}
      * @see PNDataProvider::getColumn()
      */
-    public function getColumn(string $strName) : ?string 
+    public function getColumn(string $strName) : ?string
     {
         $value = null;
         if ($this->row !== false && isset($this->row[$strName])) {
             $value = $this->row[$strName];
             if ($strName == self::COL_EXPIRES || $strName == self::COL_LASTUPDATED) {
-                
+
             }
         }
-        return $value;          
+        return $value;
     }
 
     /**
@@ -286,29 +287,31 @@ class PNDataProviderMySQL implements PNDataProvider
     {
         return $this->strLastError;
     }
-    
+
     /**
      * check, if table exist
      * @return bool
      */
-    private function tableExist() : bool 
+    private function tableExist() : bool
     {
         if (!$this->bTableExist) {
             if ($this->db) {
                 $dbres = $this->db->query("SHOW TABLES LIKE '" . $this->strTableName . "'");
-                $this->bTableExist = $dbres->num_rows > 0;
+                if (is_object($dbres)) {
+                    $this->bTableExist = $dbres->num_rows > 0;
+                }
             }
         }
         return $this->bTableExist;
     }
-    
+
     /**
      * create table if not exist
      */
-    private function createTable() : bool 
+    private function createTable() : bool
     {
         $bSucceeded = false;
-        if ($this->db) {
+        if (is_object($this->db)) {
             $strSQL  = "CREATE TABLE IF NOT EXISTS " . $this->strTableName . " (";
             $strSQL .= " " . self::COL_ID . " int NOT NULL AUTO_INCREMENT";
             $strSQL .= "," . self::COL_ENDPOINT . " text NOT NULL";
@@ -319,15 +322,15 @@ class PNDataProviderMySQL implements PNDataProvider
             $strSQL .= ",PRIMARY KEY (id)";
             $strSQL .= ",UNIQUE (endpoint(500))";
             $strSQL .= ") ENGINE=InnoDB;";
-                
+
             $bSucceeded = $this->db->query($strSQL) !== false;
             $this->strLastError = $this->db->error;
             $this->logger->info(__CLASS__ . ': ' . 'Subscription table created', strlen($this->strLastError) > 0 ? ['error' => $this->strLastError] : []);
         }
-        $this->bTableExist = $bSucceeded; 
+        $this->bTableExist = $bSucceeded;
         return $bSucceeded;
     }
-    
+
     /**
      * @param LoggerInterface $logger
      */

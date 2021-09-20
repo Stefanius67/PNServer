@@ -20,7 +20,7 @@ const strDefIcon       = './elephpant.png';
  */
 function encodeToUint8Array(strBase64) {
     var strPadding = '='.repeat((4 - (strBase64.length % 4)) % 4);
-    var strBase64 = (strBase64 + strPadding).replace(/\-/g, '+').replace(/_/g, '/');
+    strBase64 = (strBase64 + strPadding).replace(/\-/g, '+').replace(/_/g, '/');
     var rawData = atob(strBase64);
     var aOutput = new Uint8Array(rawData.length);
     for (i = 0; i < rawData.length; ++i) {
@@ -52,7 +52,7 @@ async function pnSubscribe(event) {
                         // registration failed
                         console.log('SaveSubscription failed with: ' + e);
                     });
-            }, ).catch((e) => {
+            }).catch((e) => {
                 // registration failed
                 console.log('Subscription failed with: ' + e);
             });
@@ -81,7 +81,7 @@ async function pnSubscriptionChange(event) {
                         // registration failed
                         console.log('SaveSubscription failed with: ' + e);
                     });
-            }, ).catch((e) => {
+            }).catch((e) => {
                 // registration failed
                 console.log('Subscription failed with: ' + e);
             });
@@ -142,13 +142,13 @@ function pnPushNotification(event) {
             };
         }
         if (oPayload) {
-            if (oPayload.title != undefined && oPayload.title != '') {
+            if (oPayload.title !== undefined && oPayload.title !== '') {
                 strTitle = oPayload.title;
             }
             opt = oPayload.opt;
-            if (oPayload.opt.icon == undefined || 
-                oPayload.opt.icon == null || 
-                oPayload.icon == '') {
+            if (oPayload.opt.icon === undefined || 
+                oPayload.opt.icon === null || 
+                oPayload.icon === '') {
                  // if no icon defined, use default
                opt.icon = strDefIcon;
             }
@@ -169,7 +169,7 @@ function pnNotificationClick(event) {
         const promise = clients.openWindow(event.notification.data.url);
         event.waitUntil(promise);
     }
-    if (event.action != "") {
+    if (event.action !== "") {
         // add handler for user defined action here...
         // pnNotificationAction(event.action);
         console.log('notificationclick action: ' + event.action);

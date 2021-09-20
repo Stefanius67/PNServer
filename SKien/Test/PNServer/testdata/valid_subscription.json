@@ -1,7 +1,7 @@
 {
-	"endpoint": "https:\/\/updates.push.services.mozilla.com\/wpush\/v2\/gAAAAABfKE05MszB8eQoPnOogKeJcf_XICRUipfcRqwjA3KeTrefmMWK1IE_yOJNdHERcdM2oXmsgpOuUMOTWw1sBG5AdZAnRwA8rCfIcRFY9x4bNEw50CwfcmET9l_fXprVVg_n-C2NPZmVJDeeEkHyzmUbRy3jKAM5FfwsYdhEMqvLnhRVcRA",
-    "keys": {
-        "auth": "ZL_m66okGUY5eiVKg1GQAw",
-        "p256dh": "BGgli2WV93JZbpmV825B7bPLCsUGCODFMtRJu4MPR3HEc8w4PKObnnVQZA5FIgGfGo5uFguA5m4f6k3q9fxGjH0"
+	"endpoint":"https://fcm.googleapis.com/fcm/send/fqTW0YYI2nk:APA91bGpz-RiGq_CCBnmMWfVbQv75OSixK3fYpTRJspB65adsW_FrklErDjo8U1AErc6gnBcYPDofXq3zOYjAxRNlgOyFasGDww19igZDJ7Dm5lshD_Ax53Ft-X39UfAzxb2E5AR4dSA",
+	"keys": {
+		"auth": "VG9FD5VGfnTzQgi_3YmXHQ",
+		"p256dh":"BEHgEiQs3mtBUZLj1Rsg4ljpJjfLpFkYt1YlFNik7OfBmp5v0Lz7KUUrcdWte4QRdUa96mODIpg_kVMqYwYUG9Q"
 	}
 }

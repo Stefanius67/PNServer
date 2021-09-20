@@ -7,22 +7,17 @@ use Psr\Log\LoggerAwareTrait;
 use Psr\Log\NullLogger;
 
 /**
- * main class of the package to create push notifications.
- * 
- * #### History
- * - *2020-04-12*   initial version
- * - *2020-08-03*   PHP 7.4 type hint
- * 
- * @package SKien/PNServer
- * @version 1.1.0
- * @author Stefanius <s.kien@online.de>
+ * Main class of the package to create push notifications.
+ *
+ * @package PNServer
+ * @author Stefanius <s.kientzler@online.de>
  * @copyright MIT License - see the LICENSE file for details
 */
 class PNServer
 {
     use LoggerAwareTrait;
     use PNServerHelper;
-    
+
     /** @var PNDataProvider dataprovider         */
     protected ?PNDataProvider $oDP = null;
     /** @var bool set when data has been loaded from DB         */
@@ -33,9 +28,9 @@ class PNServer
     protected ?PNVapid $oVapid = null;
     /** @var string         */
     protected string $strPayload = '';
-    /** @var array          */
+    /** @var array<PNSubscription>          */
     protected array $aSubscription = [];
-    /** @var array          */
+    /** @var array<string,array<string,mixed>>          */
     protected array $aLog = [];
     /** @var int $iAutoRemoved count of items autoremoved in loadSubscriptions */
     protected int $iAutoRemoved = 0;
@@ -43,13 +38,13 @@ class PNServer
     protected int $iExpired = 0;
     /** @var string last error msg  */
     protected string $strError = '';
-    
+
     /**
      * create instance.
      * if $oDP specified, subscriptions can be loaded direct from data Source
      * and invalid or expired subscriptions will be removed automatically in
      * case rejection from the push service.
-     *    
+     *
      * @param PNDataProvider $oDP
      */
     public function __construct(?PNDataProvider $oDP = null)
@@ -58,7 +53,7 @@ class PNServer
         $this->reset();
         $this->logger = new NullLogger();
     }
-    
+
     /**
      * @return PNDataProvider
      */
@@ -78,27 +73,27 @@ class PNServer
         $this->aSubscription = [];
         $this->aLog = [];
     }
-        
+
     /**
      * set VAPID subject and keys.
      * @param PNVapid $oVapid
      */
-    public function setVapid(PNVapid $oVapid) : void 
+    public function setVapid(PNVapid $oVapid) : void
     {
         $this->oVapid = $oVapid;
     }
-    
+
     /**
      * set payload used for all push notifications.
      * @param mixed $payload    string or PNPayload object
      */
-    public function setPayload($payload) : void 
+    public function setPayload($payload) : void
     {
         if (is_string($payload) || self::className($payload) == 'PNPayload') {
             $this->strPayload = (string) $payload;
         }
     }
-    
+
     /**
      * @return string
      */
@@ -106,7 +101,7 @@ class PNServer
     {
         return $this->strPayload;
     }
-    
+
     /**
      * add subscription to the notification list.
      * @param PNSubscription $oSubscription
@@ -118,7 +113,7 @@ class PNServer
         }
         $this->logger->info(__CLASS__ . ': ' . 'added {state} Subscription.', ['state' => $oSubscription->isValid() ? 'valid' : 'invalid']);
     }
-    
+
     /**
      * Get the count of valid subscriptions set.
      * @return int
@@ -127,7 +122,7 @@ class PNServer
     {
         return count($this->aSubscription);
     }
-    
+
     /**
      * Load subscriptions from internal DataProvider.
      * if $this->bAutoRemove set (default: true), expired subscriptions will
@@ -140,7 +135,7 @@ class PNServer
         $this->aSubscription = [];
         $this->iAutoRemoved = 0;
         $this->iExpired = 0;
-        if ($this->oDP) {
+        if ($this->oDP !== null) {
             $iBefore = $this->oDP->count();
             if (($bSucceeded = $this->oDP->init($this->bAutoRemove)) !== false) {
                 $this->bFromDB = true;
@@ -164,23 +159,23 @@ class PNServer
 
     /**
      * auto remove invalid/expired subscriptions.
-     * has only affect, if data loaded through DataProvider 
+     * has only affect, if data loaded through DataProvider
      * @param bool $bAutoRemove
      */
-    public function setAutoRemove(bool $bAutoRemove = true) : void 
+    public function setAutoRemove(bool $bAutoRemove = true) : void
     {
         $this->bAutoRemove = $bAutoRemove;
     }
-    
+
     /**
      * push all notifications.
-     * 
-     * Since a large number is expected when sending PUSH notifications, the 
+     *
+     * Since a large number is expected when sending PUSH notifications, the
      * POST requests are generated asynchronously via a cURL multi handle.
-     * The response codes are then assigned to the respective end point and a 
+     * The response codes are then assigned to the respective end point and a
      * transmission log is generated.
-     * If the subscriptions comes from the internal data provider, all 
-     * subscriptions that are no longer valid or that are no longer available 
+     * If the subscriptions comes from the internal data provider, all
+     * subscriptions that are no longer valid or that are no longer available
      * with the push service will be removed from the database.
      * @return bool
      */
@@ -200,36 +195,36 @@ class PNServer
             $mcurl = curl_multi_init();
             if ($mcurl !== false) {
                 $aRequests = array();
-                
+
                 foreach ($this->aSubscription as $oSub) {
                     $aLog = ['msg' => '', 'curl_response' => '', 'curl_response_code' => -1];
-                    // payload must be encrypted every time although it does not change, since 
+                    // payload must be encrypted every time although it does not change, since
                     // each subscription has at least his public key and authentication token of its own ...
-                    $oEncrypt = new PNEncryption($oSub->getPublicKey(), $oSub->getAuth(), $oSub->getEncoding()); 
+                    $oEncrypt = new PNEncryption($oSub->getPublicKey(), $oSub->getAuth(), $oSub->getEncoding());
                     if (($strContent = $oEncrypt->encrypt($this->strPayload)) !== false) {
                         // merge headers from encryption and VAPID (maybe both containing 'Crypto-Key')
                         if (($aVapidHeaders = $this->oVapid->getHeaders($oSub->getEndpoint())) !== false) {
                             $aHeaders = $oEncrypt->getHeaders($aVapidHeaders);
                             $aHeaders['Content-Length'] = mb_strlen($strContent, '8bit');
                             $aHeaders['TTL'] = 2419200;
-                
+
                             // build Http - Headers
                             $aHttpHeader = array();
                             foreach ($aHeaders as $strName => $strValue) {
-                                $aHttpHeader[] = $strName . ': ' . $strValue; 
+                                $aHttpHeader[] = $strName . ': ' . $strValue;
                             }
-                            
+
                             // and send request with curl
                             $curl = curl_init($oSub->getEndpoint());
-                            
+
                             if ($curl !== false) {
                                 curl_setopt($curl, CURLOPT_POST, true);
                                 curl_setopt($curl, CURLOPT_POSTFIELDS, $strContent);
                                 curl_setopt($curl, CURLOPT_HTTPHEADER, $aHttpHeader);
                                 curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-                            
+
                                 curl_multi_add_handle($mcurl, $curl);
-                            
+
                                 $aRequests[$oSub->getEndpoint()] = $curl;
                             }
                         } else {
@@ -242,20 +237,20 @@ class PNServer
                         $this->aLog[$oSub->getEndpoint()] = $aLog;
                     }
                 }
-                    
+
                 if (count($aRequests) > 0) {
                     // now performing multi request...
                     $iRunning = null;
                     do {
                         $iMState = curl_multi_exec($mcurl, $iRunning);
                     } while ($iRunning && $iMState == CURLM_OK);
-                    
+
                     if ($iMState == CURLM_OK) {
                         // ...and get response of each request
                         foreach ($aRequests as $strEndPoint => $curl) {
                             $aLog = array();
                             $iRescode = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
-                            
+
                             $aLog['msg'] = $this->getPushServiceResponseText($iRescode);
                             $aLog['curl_response'] = curl_multi_getcontent($curl);
                             $aLog['curl_response_code'] = $iRescode;
@@ -264,7 +259,7 @@ class PNServer
                             curl_multi_remove_handle($mcurl, $curl);
                             curl_close($curl);
                         }
-                        
+
                     } else {
                         $this->strError = 'curl_multi_exec() Erroro: ' . curl_multi_strerror($iMState);
                         $this->logger->error(__CLASS__ . ': ' . $this->strError);
@@ -311,25 +306,25 @@ class PNServer
                     $aHeaders = $oEncrypt->getHeaders($aVapidHeaders);
                     $aHeaders['Content-Length'] = mb_strlen($strContent, '8bit');
                     $aHeaders['TTL'] = 2419200;
-                    
+
                     // build Http - Headers
                     $aHttpHeader = array();
                     foreach ($aHeaders as $strName => $strValue) {
                         $aHttpHeader[] = $strName . ': ' . $strValue;
                     }
-                    
+
                     // and send request with curl
                     $curl = curl_init($oSub->getEndpoint());
-                    
+
                     if ($curl !== false) {
                         curl_setopt($curl, CURLOPT_POST, true);
                         curl_setopt($curl, CURLOPT_POSTFIELDS, $strContent);
                         curl_setopt($curl, CURLOPT_HTTPHEADER, $aHttpHeader);
                         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-                        
+
                         if (($strResponse = curl_exec($curl)) !== false) {
                             $iRescode = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
-                            
+
                             $aLog['msg'] = $this->getPushServiceResponseText($iRescode);
                             $aLog['curl_response'] = $strResponse;
                             $aLog['curl_response_code'] = $iRescode;
@@ -347,15 +342,15 @@ class PNServer
         $this->logger->info(__CLASS__ . ': ' . 'single notifications pushed.');
         return (strlen($this->strError) == 0);
     }
-    
+
     /**
-     * @return array
+     * @return array<string,array<string,mixed>>
      */
     public function getLog() : array
     {
         return $this->aLog;
     }
-    
+
     /**
      * Build summary for the log of the last push operation.
      * - total count of subscriptions processed<br/>
@@ -366,16 +361,16 @@ class PNServer
      * The count of expired entries removed in the loadSubscriptions() is added to
      * the count of responsecode caused removed items.
      * The count of failed and removed messages may differ even if $bAutoRemove is set
-     * if there are transferns with responsecode 413 or 429    
-     * @return array
+     * if there are transferns with responsecode 413 or 429
+     * @return array<string,int>
      */
     public function getSummary() : array
     {
         $aSummary = [
-            'total' => $this->iExpired, 
-            'pushed' => 0, 
-            'failed' => 0, 
-            'expired' => $this->iExpired, 
+            'total' => $this->iExpired,
+            'pushed' => 0,
+            'failed' => 0,
+            'expired' => $this->iExpired,
             'removed' => $this->iAutoRemoved,
         ];
         foreach ($this->aLog as $aLogItem) {
@@ -399,7 +394,7 @@ class PNServer
     {
         return $this->strError;
     }
-    
+
     /**
      * Check if item should be removed.
      * We remove items with responsecode<br/>
@@ -408,7 +403,7 @@ class PNServer
      * -> 400: Invalid request<br/>
      * -> 404: Not Found<br/>
      * -> 410: Gone<br/>
-     * 
+     *
      * @param int $iRescode
      * @return bool
      */
@@ -417,7 +412,7 @@ class PNServer
         $aRemove = $this->bAutoRemove ? [-1, 0, 400, 404, 410] : [];
         return in_array($iRescode, $aRemove);
     }
-    
+
     /**
      * get text according to given push service responsecode
      *
@@ -432,11 +427,11 @@ class PNServer
      * 429:     Too many requests. Meaning your application server has reached a rate limit with a push service.
      *          The push service should include a 'Retry-After' header to indicate how long before another request
      *          can be made.
-     * 
+     *
      * @param int $iRescode
      * @return string
      */
-    protected function getPushServiceResponseText(int $iRescode) : string 
+    protected function getPushServiceResponseText(int $iRescode) : string
     {
         $strText = 'unknwown Rescode from push service: ' . $iRescode;
         $aText = array(

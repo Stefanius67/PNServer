@@ -6,7 +6,7 @@ namespace SKien\PNServer\Utils;
 /*
  * extracted required classes and functions from package
  *		spomky-labs/jose
- *		https://github.com/Spomky-Labs/Jose 
+ *		https://github.com/Spomky-Labs/Jose
  *
  * @package PNServer
  * @version 1.0.0
@@ -72,7 +72,7 @@ class Math
         return \gmp_mul($multiplier, $multiplicand);
     }
 
-    public static function pow(\GMP $base, int $exponent) : \GMP 
+    public static function pow(\GMP $base, int $exponent) : \GMP
     {
         return \gmp_pow($base, $exponent);
     }
@@ -95,7 +95,7 @@ class Math
     /**
      * @param \GMP $a
      * @param \GMP $m
-     * @return \GMP|bool
+     * @return \GMP|false
      */
     public static function inverseMod(\GMP $a, \GMP $m)
     {
@@ -113,24 +113,29 @@ class Math
         return \gmp_strval(\gmp_init($number, $from), $to);
     }
 
-    public static function rightShift(\GMP $number, int $positions) : \GMP 
+    public static function rightShift(\GMP $number, int $positions) : \GMP
     {
         // when using \gmp_div, phpStan says: Method SKien\PNServer\Utils\Math::rightShift() should return GMP but returns resource. ?
         return \gmp_div_q($number, \gmp_pow(\gmp_init(2, 10), $positions));
     }
-    
+
     public static function modSub(\GMP $minuend, \GMP $subtrahend, \GMP $modulus) : \GMP
     {
         return self::mod(self::sub($minuend, $subtrahend), $modulus);
     }
-    
+
     public static function modMul(\GMP $multiplier, \GMP $muliplicand, \GMP $modulus) : \GMP
     {
         return self::mod(self::mul($multiplier, $muliplicand), $modulus);
     }
-    
+
     public static function modDiv(\GMP $dividend, \GMP $divisor, \GMP $modulus) : \GMP
     {
-        return self::mul($dividend, self::inverseMod($divisor, $modulus));
+        $invmod = self::inverseMod($divisor, $modulus);
+        if ($invmod !== false) {
+            return self::mul($dividend, $invmod);
+        } else {
+            return gmp_init(0);
+        }
     }
 }

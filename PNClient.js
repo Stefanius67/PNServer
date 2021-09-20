@@ -54,11 +54,11 @@ async function pnUpdate() {
  * check if PN already subscribed
  */
 async function pnSubscribed() {
-    var swReg = undefined;
+    var swReg;
     if (pnAvailable()) {
         swReg = await navigator.serviceWorker.getRegistration();
     }
-    return (swReg != undefined);
+    return (swReg !== undefined);
 }
 
 /**

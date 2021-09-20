@@ -4,9 +4,9 @@ require_once 'MyVapid.php';
 require_once 'MyLogger.php';
 
 use SKien\PNServer\PNDataProviderSQLite;
-use SKien\PNServer\PNSubscription;
 use SKien\PNServer\PNPayload;
 use SKien\PNServer\PNServer;
+use SKien\PNServer\PNSubscription;
 
 /**
  * Example to send single push notifications.
@@ -16,23 +16,23 @@ use SKien\PNServer\PNServer;
  *
  * First you should open PNTestClient.html in your browser and click the
  * [Subscribe] button to create a valis subscription in your database.
- * 
+ *
  * Needed steps to send notification to all subscriptions stored in our database:
  * 1. Create and init dataprovider for database containing at least one valid subscription
  * 2. Set our VAPID keys (rename MyVapid.php.org to MyVapid.php ans set your own keys)
  * 3. Create and set the payload
- * 4. manuelly step through the Subscriptions... 
+ * 4. manuelly step through the Subscriptions...
  * 5. .. and push each of the notification by single call
- * 
+ *
  * After the notification was pushed, a summary and/or a detailed log can be
- * retrieved from the server 
- * 
- * If you want to log several events or errors, you can pass any PSR-3 compliant 
+ * retrieved from the server
+ *
+ * If you want to log several events or errors, you can pass any PSR-3 compliant
  * logger of your choice to the PNDataProvider- and PNServer-object.
  *
  * THIS CODE IS INTENDED ONLY AS EXAMPLE - DONT USE IT DIRECT IN YOU PROJECT
  *
- * @author Stefanius <s.kien@online.de>
+ * @author Stefanius <s.kientzler@online.de>
  * @copyright MIT License - see the LICENSE file for details
  */
 
@@ -79,7 +79,7 @@ $oServer->setVapid(getMyVapid());
 // - URL to icon can be
 //    * relative to the origin location of the service worker
 //    * absolute from the homepage (begining with a '/')
-//    * complete URL (beginning with https://) 
+//    * complete URL (beginning with https://)
 $oPayload = new PNPayload('', "...first text to display.", './elephpant.png');
 $oPayload->setTag('news', true);
 $oPayload->setURL('/where-to-go.php');
@@ -93,5 +93,5 @@ while (($strJsonSub = $oDP->fetch()) !== false) {
 $aLog = $oServer->getLog();
 echo '<h2>Push - Log:</h2>' . PHP_EOL;
 foreach ($aLog as $strEndpoint => $aMsg ) {
-    echo PNSubscription::getOrigin($strEndpoint) . ':&nbsp;' .$aMsg['msg'] . '<br/>' . PHP_EOL;	
+    echo PNSubscription::getOrigin($strEndpoint) . ':&nbsp;' .$aMsg['msg'] . '<br/>' . PHP_EOL;
 }

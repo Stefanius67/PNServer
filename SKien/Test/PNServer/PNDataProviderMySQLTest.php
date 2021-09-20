@@ -22,14 +22,17 @@ class PNDataProviderMySQLTest extends PNDataProviderTest
         $db = mysqli_connect($GLOBALS['MYSQL_HOST'], $GLOBALS['MYSQL_USER'], $GLOBALS['MYSQL_PASSWD'], $GLOBALS['MYSQL_DBNAME']);
         if (!$db) {
             fwrite(STDOUT, 'MySQL: Connect Error ' . mysqli_connect_errno() . PHP_EOL);
+        } else {
+            $db->query("DROP TABLE IF EXISTS " . PNDataProviderMySQL::TABLE_NAME);
         }
-        $db->query("DROP TABLE IF EXISTS " . PNDataProviderMySQL::TABLE_NAME);
     }
     
     public static function tearDownAfterClass() : void
     {
         $db = mysqli_connect($GLOBALS['MYSQL_HOST'], $GLOBALS['MYSQL_USER'], $GLOBALS['MYSQL_PASSWD'], $GLOBALS['MYSQL_DBNAME']);
-        $db->query("DROP TABLE IF EXISTS " . PNDataProviderMySQL::TABLE_NAME);
+        if ($db) {
+            $db->query("DROP TABLE IF EXISTS " . PNDataProviderMySQL::TABLE_NAME);
+        }
     }
 
     public function setUp() : void
