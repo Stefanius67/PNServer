@@ -124,9 +124,11 @@ class PNEncryption
             $strTag = '';
             $strEncrypted = openssl_encrypt($strPayload, 'aes-128-gcm', $cek, OPENSSL_RAW_DATA, $nonce, $strTag);
 
-            // base64URL encode salt and local public key
-            $this->strSalt = self::encodeBase64URL($this->strSalt);
-            $this->strLocalPublicKey = self::encodeBase64URL($this->strLocalPublicKey);
+            // base64URL encode salt and local public key (for aes128gcm they are needed in binary form)
+            if ($this->strEncoding === 'aesgcm') {
+                $this->strSalt = self::encodeBase64URL($this->strSalt);
+                $this->strLocalPublicKey = self::encodeBase64URL($this->strLocalPublicKey);
+            }
 
             $strContent = $this->getContentCodingHeader() . $strEncrypted . $strTag;
         } catch (\RuntimeException $e) {
